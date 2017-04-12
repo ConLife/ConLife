@@ -8,10 +8,16 @@ import com.jogamp.opengl.awt.GLJPanel;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
-import javax.swing.border.BevelBorder;
+import javax.swing.text.MaskFormatter;
 import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.text.ParseException;
+import java.util.regex.Pattern;
 
 public class ConlifeMain extends JFrame {
+
+    private static final Pattern rulesPattern = Pattern.compile("B\\d+\\/S\\d+");
 
     /**
      * Starts the application.
@@ -26,25 +32,46 @@ public class ConlifeMain extends JFrame {
         setTitle("Conway's Game of Life (with Concurrency!)");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(this);
-        getContentPane().add(initComponents());
+        try {
+            getContentPane().add(initComponents());
+        } catch (ParseException e) {
+            System.err.println("Could not create the GUI");
+            System.exit(1);
+        }
         setPreferredSize(new Dimension(900, 700));
         pack();
         setLocationRelativeTo(null);
     }
 
-    private JPanel initComponents() {
+    private JPanel initComponents() throws ParseException {
         JPanel panel = new JPanel(new MigLayout("fill", "[grow]", "[shrink][grow][shrink]"));
 
-        JPanel settingPanel = new JPanel(new MigLayout("fill", "[grow]", "[]"));
-        settingPanel.setBorder(BorderFactory.createRaisedBevelBorder());
+        JPanel settingPanel = new JPanel(new MigLayout("fill", "[shrink][grow]", "[]"));
+        settingPanel.setBorder(BorderFactory.createEtchedBorder());
         JLabel rulesLabel = new JLabel("Rules");
-        JTextField rulesField = new JTextField();
+        MaskFormatter formatter = new MaskFormatter("B##/S##");
+        final JFormattedTextField rulesField = new JFormattedTextField(formatter);
+        rulesField.setText(GameState.DEFAULT_RULES_STRING);
+        rulesField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) { }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                try {
+                    Rules rules = Rules.parseRules(rulesField.getText());
+                    GameState.updateRules(rules);
+                } catch (ParseException ignore) {
+                    SwingUtilities.invokeLater(() -> {rulesField.setText(GameState.DEFAULT_RULES_STRING);});
+                }
+            }
+        });
         settingPanel.add(rulesLabel, "");
         settingPanel.add(rulesField, "growx");
 
         GLProfile glprofile = GLProfile.getDefault();
-        GLCapabilities glcapabilities = new GLCapabilities( glprofile );
-        GLJPanel gamePanel = new GLJPanel( glcapabilities );
+        GLCapabilities glcapabilities = new GLCapabilities(glprofile);
+        GLJPanel gamePanel = new GLJPanel(glcapabilities);
 
         gamePanel.addGLEventListener( new GLEventListener() {
 
@@ -65,11 +92,13 @@ public class ConlifeMain extends JFrame {
             }
         });
 
-        JPanel buttonsPanel = new JPanel(new MigLayout());
-        buttonsPanel.setBorder(BorderFactory.createRaisedBevelBorder());
+        JPanel buttonsPanel = new JPanel(new MigLayout("fill", "[grow][grow]", ""));
+        buttonsPanel.setBorder(BorderFactory.createEtchedBorder());
 
         JButton startButton = new JButton("Start");
-        buttonsPanel.add(startButton, "center");
+        buttonsPanel.add(startButton, "center, growx");
+        JButton stopButton = new JButton("Stop");
+        buttonsPanel.add(stopButton, "center, growx");
 
         panel.add(settingPanel, "growx, wrap");
         panel.add(gamePanel, "growx, growy, wrap");
@@ -77,4 +106,6 @@ public class ConlifeMain extends JFrame {
 
         return panel;
     }
+
+
 }
