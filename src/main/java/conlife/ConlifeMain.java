@@ -61,7 +61,7 @@ public class ConlifeMain extends JFrame {
                 try {
                     Rules rules = Rules.parseRules(rulesField.getText());
                     GameState.updateRules(rules);
-                } catch (ParseException ignore) {
+                } catch (ParseException | Rules.RulesException ignore) {
                     SwingUtilities.invokeLater(() -> {rulesField.setText(GameState.DEFAULT_RULES_STRING);});
                 }
             }
@@ -74,7 +74,6 @@ public class ConlifeMain extends JFrame {
         GLJPanel gamePanel = new GLJPanel(glcapabilities);
 
         gamePanel.addGLEventListener( new GLEventListener() {
-
             @Override
             public void reshape(GLAutoDrawable glAutoDrawable, int x, int y, int width, int height ) {
                 OneTriangle.setup( glAutoDrawable.getGL().getGL2(), width, height );
@@ -92,13 +91,20 @@ public class ConlifeMain extends JFrame {
             }
         });
 
-        JPanel buttonsPanel = new JPanel(new MigLayout("fill", "[grow][grow]", ""));
+        JPanel buttonsPanel = new JPanel(new MigLayout("fill", "[grow][grow][grow][grow]", ""));
         buttonsPanel.setBorder(BorderFactory.createEtchedBorder());
 
         JButton startButton = new JButton("Start");
         buttonsPanel.add(startButton, "center, growx");
+        JButton pauseButton = new JButton("Pause");
+        pauseButton.setEnabled(false);
+        buttonsPanel.add(pauseButton, "center, growx");
         JButton stopButton = new JButton("Stop");
+        stopButton.setEnabled(false);
         buttonsPanel.add(stopButton, "center, growx");
+        JButton stepButton = new JButton("Step");
+        stepButton.setEnabled(false);
+        buttonsPanel.add(stepButton, "center, growx");
 
         panel.add(settingPanel, "growx, wrap");
         panel.add(gamePanel, "growx, growy, wrap");

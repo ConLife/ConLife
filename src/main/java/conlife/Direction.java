@@ -14,7 +14,7 @@ enum Direction {
             case EAST:
             case SOUTH_EAST:
                 x = localX + 1;
-                if (localX >= boardWidth) {
+                if (x >= boardWidth) {
                     x = 0;
                 }
                 return x;
@@ -22,7 +22,7 @@ enum Direction {
             case WEST:
             case SOUTH_WEST:
                 x = localX - 1;
-                if (localX < 0) {
+                if (x < 0) {
                     x = boardWidth - 1;
                 }
                 return x;
@@ -41,7 +41,7 @@ enum Direction {
             case SOUTH:
             case SOUTH_EAST:
                 y = localY + 1;
-                if (localY >= boardHeight) {
+                if (y >= boardHeight) {
                     y = 0;
                 }
                 return y;
@@ -49,12 +49,20 @@ enum Direction {
             case NORTH:
             case NORTH_EAST:
                 y = localY - 1;
-                if (localY < 0) {
+                if (y < 0) {
                     y = boardHeight - 1;
                 }
                 return y;
             default:
                 return localY;
         }
+    }
+
+    public Direction getOpposite() {
+        int ordinal = this.ordinal() + Direction.values().length / 2;
+        if (ordinal >= Direction.values().length) {
+            ordinal = ordinal - Direction.values().length;
+        }
+        return Direction.values()[ordinal];
     }
 }

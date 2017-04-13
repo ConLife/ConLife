@@ -34,11 +34,15 @@ class Cell {
         this.y = y;
     }
 
-    private void populateNeighbor(Direction direction, Cell neighborCell) {
+    void populateNeighbor(Direction direction, Cell neighborCell) {
         neighbors[direction.ordinal()] = neighborCell;
     }
 
     void determineNextState() {
         // neighbors[Direction.EAST.ordinal()]
+    }
+
+    public Cell getNeighbor(Direction d) {
+        return neighbors[d.ordinal()];
     }
 }

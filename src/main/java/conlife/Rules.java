@@ -8,7 +8,7 @@ class Rules {
         BIRTH, SURVIVE, DEATH;
     }
 
-    static Rules parseRules(String rulesString) throws ParseException {
+    static Rules parseRules(String rulesString) throws ParseException, RulesException {
         String[] rules = rulesString.split("/");
         if (rules.length != 2) {
             throw new ParseException("Invalid rules", -1);
@@ -18,15 +18,15 @@ class Rules {
             throw new ParseException("Invalid rules", -1);
         }
         try {
-            int birthMin = Integer.parseInt(rules[0].substring(1,1));
-            int birthMax = Integer.parseInt(rules[0].substring(1,1));
+            int birthMin = Integer.parseInt(rules[0].substring(1,2));
+            int birthMax = Integer.parseInt(rules[0].substring(2,3));
             if (birthMin == 0) {
                 birthMin = birthMax;
             }
-            int surviveMin = Integer.parseInt(rules[0].substring(1,1));
-            int surviveMax = Integer.parseInt(rules[0].substring(1,1));
+            int surviveMin = Integer.parseInt(rules[1].substring(1,2));
+            int surviveMax = Integer.parseInt(rules[1].substring(2,3));
             return new Rules(birthMin, birthMax, surviveMin, surviveMax);
-        } catch (NumberFormatException | Rules.RulesException e) {
+        } catch (NumberFormatException e) {
             throw new ParseException("Invalid rules", -1);
         }
     }
