@@ -2,6 +2,8 @@ package conlife;
 
 import java.awt.Dimension;
 import java.text.ParseException;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class GameState {
 
@@ -11,7 +13,7 @@ public class GameState {
 
     // synchronization of the rules is probably not a concern...
     private static final Object rulesLock = new Object();
-    static Rules rules;
+    private static Rules rules;
 
     static {
         try {
@@ -22,11 +24,14 @@ public class GameState {
 
     }
 
-
     static void updateRules(Rules rules) {
         synchronized (rulesLock) {
             GameState.rules = rules;
         }
+    }
+
+    static Rules getRules() {
+        return rules;
     }
 
     private int currentStep = 0;
@@ -34,6 +39,9 @@ public class GameState {
 
     private final int boardWidth, boardHeight;
     private Cell[][] board;
+
+    private final Queue<Cell> currentCellQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<Cell> nextStepCellQueue = new ConcurrentLinkedQueue<>();
 
     static GameState createNewGame(int maxStep) {
         return new GameState(maxStep, (int) DEFAULT_BOARD_SIZE.getWidth(), (int) DEFAULT_BOARD_SIZE.getHeight());
@@ -47,7 +55,7 @@ public class GameState {
 
         for (int x = 0; x < boardWidth; x++) {
             for (int y = 0; y < boardHeight; y++) {
-                board[x][y] = new Cell(x, y);
+                board[x][y] = new Cell(this, x, y);
             }
         }
 
@@ -78,5 +86,17 @@ public class GameState {
         return board[x][y];
     }
 
+    void addCellToNextStepQueue(Cell cell) {
+        if (cell.isAddedToNextStepQueue()) {
+            throw new IllegalStateException("Cell has already been added to the queue");
+        }
+        nextStepCellQueue.add(cell);
+    }
 
+    /**
+     * For testing only
+     */
+    boolean _nextStepQueueContainsCell(Cell cell) {
+        return nextStepCellQueue.contains(cell);
+    }
 }
