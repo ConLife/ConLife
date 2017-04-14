@@ -9,7 +9,7 @@ class Cell {
     private AtomicBoolean alive = new AtomicBoolean(false);
     private AtomicBoolean nextStepLife = new AtomicBoolean(false);
 
-    private AtomicBoolean currentStepCalculated = new AtomicBoolean(false);
+    private AtomicBoolean currentStepStateCalculated = new AtomicBoolean(false);
     private AtomicBoolean addedToNextStepQueue = new AtomicBoolean(false);
 
     Cell[] neighbors = new Cell[8];
@@ -38,11 +38,34 @@ class Cell {
         neighbors[direction.ordinal()] = neighborCell;
     }
 
+    /**
+     * Looks at the current state of this cell and the current state of the neighbor cells and determines the next state
+     * of this cell. Afterwards, it flags this cell that it has calculated its state for this step.
+     */
     void determineNextState() {
         // neighbors[Direction.EAST.ordinal()]
     }
 
     public Cell getNeighbor(Direction d) {
         return neighbors[d.ordinal()];
+    }
+
+    public boolean isAlive() {
+        return alive.get();
+    }
+
+    public boolean isAliveNextStep() {
+        return nextStepLife.get();
+    }
+
+    public boolean isStateCalculatedThisStep() {
+        return currentStepStateCalculated.get();
+    }
+
+    /**
+     * For testing only
+     */
+    void _setCurrentlyAlive(boolean alive) {
+        this.alive.set(alive);
     }
 }
