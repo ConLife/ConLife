@@ -46,7 +46,7 @@ public class ConlifeMain extends JFrame {
     private JPanel initComponents() throws ParseException {
         JPanel panel = new JPanel(new MigLayout("fill", "[grow]", "[shrink][grow][shrink]"));
 
-        JPanel settingPanel = new JPanel(new MigLayout("fill", "[shrink][grow]", "[]"));
+        JPanel settingPanel = new JPanel(new MigLayout("fill", "[shrink][grow][shrink][grow]", "[][]"));
         settingPanel.setBorder(BorderFactory.createEtchedBorder());
         JLabel rulesLabel = new JLabel("Rules");
         MaskFormatter formatter = new MaskFormatter("B##/S##");
@@ -68,6 +68,37 @@ public class ConlifeMain extends JFrame {
         });
         settingPanel.add(rulesLabel, "");
         settingPanel.add(rulesField, "growx");
+
+        JLabel maxStepsLabel = new JLabel("Max Steps");
+        final JTextField maxStepsField = new JTextField("-1");
+        rulesField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) { }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                try {
+                    String text = maxStepsField.getText();
+                    Integer.parseInt(text);
+                } catch (NumberFormatException ignore) {
+                    SwingUtilities.invokeLater(() -> {rulesField.setText("-1");});
+                }
+            }
+        });
+        settingPanel.add(maxStepsLabel, "");
+        settingPanel.add(maxStepsField, "growx, wrap");
+
+        JLabel fpsLabel = new JLabel("FPS");
+        JTextField fpsField = new JTextField("0");
+        fpsField.setEnabled(false);
+        settingPanel.add(fpsLabel, "");
+        settingPanel.add(fpsField, "growx");
+
+        JLabel stepLabel = new JLabel("Current Step");
+        JTextField stepField = new JTextField("0");
+        stepField.setEnabled(false);
+        settingPanel.add(stepLabel, "");
+        settingPanel.add(stepField, "growx");
 
         GLProfile glprofile = GLProfile.getDefault();
         GLCapabilities glcapabilities = new GLCapabilities(glprofile);
