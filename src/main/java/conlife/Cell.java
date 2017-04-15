@@ -53,6 +53,14 @@ class Cell {
         // neighbors[Direction.EAST.ordinal()]
     }
 
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
     public Cell getNeighbor(Direction d) {
         return neighbors[d.ordinal()];
     }
@@ -77,10 +85,10 @@ class Cell {
         return -1;
     }
 
-    /**
-     * For testing only
-     */
-    void _setCurrentlyAlive(boolean alive) {
+    void setCurrentlyAlive(boolean alive) throws IllegalStateException {
+        if (gameState.getCurrentStep() > 0) {
+            throw new IllegalStateException("Cannot set cell life after game has started");
+        }
         this.alive.set(alive);
     }
 }
