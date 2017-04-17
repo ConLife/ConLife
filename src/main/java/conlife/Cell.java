@@ -114,6 +114,10 @@ class Cell {
         return addedToNextStepQueue.get();
     }
 
+    public boolean isAddedToUpdateQueue() {
+        return addedToUpdateQueue.get();
+    }
+
     public int getLivingNeighborCount() {
         int living = 0;
         for (Direction d : Direction.values()) {
