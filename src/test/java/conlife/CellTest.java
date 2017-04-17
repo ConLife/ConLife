@@ -9,6 +9,7 @@ import org.mockito.stubbing.Answer;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -67,9 +68,10 @@ public class CellTest {
 
     // Creates the illusion of a neighbor cell being alive in the given direction for the local cell
     private Cell mockNeighborCellLiving(Cell localCell, Direction neighborDirection) {
-        Cell neighborCell = spy(localCell.getNeighbor(neighborDirection));
-        when(neighborCell.isAlive()).thenReturn(true);
-        when(localCell.getNeighbor(Matchers.eq(neighborDirection))).thenReturn(neighborCell);
+        Cell neighborCell = localCell.getNeighbor(neighborDirection);
+        final Cell spyNeighborCell = spy(neighborCell);
+        when(spyNeighborCell.isAlive()).thenReturn(true);
+        doReturn(spyNeighborCell).when(localCell).getNeighbor(Matchers.eq(neighborDirection));
         return neighborCell;
     }
 
