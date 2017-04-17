@@ -69,7 +69,7 @@ class Cell {
                 gameState.addCellToNextStepQueue(this);
                 addedToNextStepQueue.set(true);
             }
-        } else if (!isAlive() && GameState.getRules().isBirth(livingNeighbors)){// rule 4
+        } else if (!isAlive() && gameState.getRules().isBirth(livingNeighbors)){// rule 4
             nextStepLife.set(true);
             if (!isAddedToNextStepQueue()) {
                 gameState.addCellToNextStepQueue(this);

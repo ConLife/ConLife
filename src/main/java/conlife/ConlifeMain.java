@@ -60,7 +60,7 @@ public class ConlifeMain extends JFrame {
             public void focusLost(FocusEvent e) {
                 try {
                     Rules rules = Rules.parseRules(rulesField.getText());
-                    GameState.updateRules(rules);
+                    GameState.updateDefaultRules(rules);
                 } catch (ParseException | Rules.RulesException ignore) {
                     SwingUtilities.invokeLater(() -> {rulesField.setText(GameState.DEFAULT_RULES_STRING);});
                 }

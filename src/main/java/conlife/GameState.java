@@ -13,30 +13,31 @@ public class GameState {
 
     // synchronization of the rules is probably not a concern...
     private static final Object rulesLock = new Object();
-    private static Rules rules;
+    private static Rules defaultRules;
 
     static {
         try {
-            rules = Rules.parseRules(DEFAULT_RULES_STRING);
+            defaultRules = Rules.parseRules(DEFAULT_RULES_STRING);
         } catch (ParseException | Rules.RulesException e) {
             throw new RuntimeException("Initial rules are busted", e);
         }
 
     }
 
-    static void updateRules(Rules rules) {
+    static void updateDefaultRules(Rules rules) {
         synchronized (rulesLock) {
-            GameState.rules = rules;
+            GameState.defaultRules = rules;
         }
     }
 
-    static Rules getRules() {
-        return rules;
+    static Rules getDefaultRules() {
+        return defaultRules;
     }
 
     private int currentStep = 0;
     private int maxStep = -1;
 
+    private final Rules rules;
     private final int boardWidth, boardHeight;
     private Cell[][] board;
 
@@ -47,10 +48,14 @@ public class GameState {
         return createNewGame(DEFAULT_BOARD_SIZE);
     }
 
+    static GameState createNewGame(String[] initialCondition, char livingCellChar) {
+        return createNewGame(getDefaultRules(), initialCondition, livingCellChar);
+    }
+
     /**
      * Probably going to only be for testing...
      */
-    static GameState createNewGame(String[] initialCondition, char livingCellChar) {
+    static GameState createNewGame(Rules rules, String[] initialCondition, char livingCellChar) {
         int height = initialCondition.length;
         int width = -1;
         for (String line : initialCondition) {
@@ -60,16 +65,21 @@ public class GameState {
                 throw new IllegalArgumentException("Every line must be equal length");
             }
         }
-        GameState game = createNewGame(new Dimension(width, height));
+        GameState game = createNewGame(rules, new Dimension(width, height));
         game.setInitialGameState(initialCondition, livingCellChar);
         return game;
     }
 
     static GameState createNewGame(Dimension boardSize) {
-        return new GameState((int) boardSize.getWidth(), (int) boardSize.getHeight());
+        return createNewGame(getDefaultRules(), boardSize);
     }
 
-    private GameState(int boardWidth, int boardHeight) {
+    static GameState createNewGame(Rules rules, Dimension boardSize) {
+        return new GameState(rules, (int) boardSize.getWidth(), (int) boardSize.getHeight());
+    }
+
+    private GameState(Rules rules, int boardWidth, int boardHeight) {
+        this.rules = rules;
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
         board = new Cell[boardHeight][boardWidth];
@@ -97,6 +107,10 @@ public class GameState {
                 }
             }
         }
+    }
+
+    public Rules getRules() {
+        return rules;
     }
 
     public int getBoardWidth() {

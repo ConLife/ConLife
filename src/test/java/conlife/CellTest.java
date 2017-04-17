@@ -19,7 +19,7 @@ public class CellTest {
 
     @Before
     public void setup() throws Exception {
-        GameState.updateRules(Rules.parseRules("B03/S23"));
+        GameState.updateDefaultRules(Rules.parseRules("B03/S23"));
         game = setupGame();
     }
 
