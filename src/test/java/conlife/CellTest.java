@@ -2,9 +2,13 @@ package conlife;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -41,6 +45,7 @@ public class CellTest {
     @Test
     public void testGetNeighborCount() {
         Cell cell = game.getCell(5, 5);
+        cell = spy(cell);
         assertEquals(0, cell.getLivingNeighborCount());
         mockNeighborCellLiving(cell, Direction.NORTH);
         assertEquals(1, cell.getLivingNeighborCount());
@@ -60,9 +65,11 @@ public class CellTest {
         assertEquals(8, cell.getLivingNeighborCount());
     }
 
+    // Creates the illusion of a neighbor cell being alive in the given direction for the local cell
     private Cell mockNeighborCellLiving(Cell localCell, Direction neighborDirection) {
         Cell neighborCell = spy(localCell.getNeighbor(neighborDirection));
         when(neighborCell.isAlive()).thenReturn(true);
+        when(localCell.getNeighbor(Matchers.eq(neighborDirection))).thenReturn(neighborCell);
         return neighborCell;
     }
 
@@ -88,7 +95,7 @@ public class CellTest {
         assertTrue(cell.isStateCalculatedThisStep());
         assertFalse(cell.isAlive());
         assertTrue(cell.isAliveNextStep());
-        assertTrue(game._nextStepQueueContainsCell(cell));
+        assertTrue(cell.isAddedToNextStepQueue());
 
         for (int i = 0; i < 9; i++) {
             if (i == 3) {
@@ -104,9 +111,11 @@ public class CellTest {
             assertFalse(cell.isAlive());
             assertFalse(cell.isAliveNextStep());
             if (i == 0) {
-                assertFalse(game._nextStepQueueContainsCell(cell));
+                // If there are no neighbors, and this cell is dead, it won't be checked next step
+                assertFalse(cell.isAddedToNextStepQueue());
             } else {
-                assertTrue(game._nextStepQueueContainsCell(cell));
+                // But if there are any number of neighbors alive, it will be checked next step
+                assertTrue(cell.isAddedToNextStepQueue());
             }
         }
 

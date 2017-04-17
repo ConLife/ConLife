@@ -2,6 +2,7 @@ package conlife;
 
 enum Direction {
 
+    // DO NOT CHANGE THE ORDER OF THESE
     NORTH, NORTH_EAST, EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, WEST, NORTH_WEST;
 
     public int getNeighborX(int localX, int boardWidth) {
