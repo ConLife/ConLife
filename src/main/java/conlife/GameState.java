@@ -42,6 +42,7 @@ public class GameState {
     private Cell[][] board;
 
     private final Queue<Cell> currentCellQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
     private final Queue<Cell> nextStepCellQueue = new ConcurrentLinkedQueue<>();
 
     static GameState createNewGame() {
@@ -149,7 +150,20 @@ public class GameState {
     // further in class. However, we could probably initialy make it work in serial. I don't think it will be too
     // difficult to change over to parallel.
     public void processGameStep() {
+        Cell cell;
+        while ((cell = currentCellQueue.poll()) != null) {
+            cell.determineNextState();
+        }
 
+        while ((cell = cellUpdateQueue.poll()) != null) {
+            cell.updateToNextState();
+        }
+
+        while ((cell = nextStepCellQueue.poll()) != null) {
+            currentCellQueue.add(cell);
+        }
+
+        currentStep++;
     }
 
     public int getCurrentStep() {

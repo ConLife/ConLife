@@ -16,6 +16,7 @@ class Cell {
     // When this cells state is determined it should be added to the next step queue unless another cell has caused it
     // to be added already which is why we have this boolean.
     private AtomicBoolean addedToNextStepQueue = new AtomicBoolean(false);
+    private AtomicBoolean addedToUpdateQueue = new AtomicBoolean(false);
 
     Cell[] neighbors = new Cell[8];
 
@@ -79,6 +80,10 @@ class Cell {
         // neighbors[Direction.EAST.ordinal()]
         //after tested
         currentStepStateCalculated.set(true);
+    }
+
+    void updateToNextState() {
+
     }
 
     public int getX() {
