@@ -97,8 +97,8 @@ class Cell {
 
     public int getLivingNeighborCount() {
         int living = 0;
-        for (int neighbor = 0; neighbor < 8; neighbor++) {
-            if (neighbors[neighbor].isAlive()) {
+        for (Direction d : Direction.values()) {
+            if (getNeighbor(d).isAlive()) {
                 living++;
             }
         }
