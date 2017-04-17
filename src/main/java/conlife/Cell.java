@@ -53,14 +53,24 @@ class Cell {
         int livingNeighbors = getLivingNeighborCount();
         if(isAlive() && livingNeighbors < 2){//rule 1
             nextStepLife.set(false);
+            if (livingNeighbors !=0 && !isAddedToNextStepQueue()) {
+                gameState.addCellToNextStepQueue(this);    
+            }
         } else if (isAlive() && (livingNeighbors == 2 || livingNeighbors == 3)) {//rule 2
             nextStepLife.set(true);
-            gameState.addCellToNextStepQueue(this);
+            if (!isAddedToNextStepQueue()) {
+               gameState.addCellToNextStepQueue(this);    
+            }
         } else if (isAlive() && livingNeighbors > 3){// rule 3
             nextStepLife.set(false);
+            if (!isAddedToNextStepQueue()) {
+                gameState.addCellToNextStepQueue(this);    
+            }
         } else if (!isAlive() && livingNeighbors == 3){// rule 4
             nextStepLife.set(true);
-            gameState.addCellToNextStepQueue(this);   
+            if (!isAddedToNextStepQueue()) {
+                gameState.addCellToNextStepQueue(this);    
+            }        
         }
         // neighbors[Direction.EAST.ordinal()]
         //after tested
