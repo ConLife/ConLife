@@ -50,7 +50,21 @@ class Cell {
      * the cell to the next step queue if it has not already been added.
      */
     void determineNextState() {
+        int livingNeighbors = getLivingNeighborCount();
+        if(isAlive() && livingNeighbors < 2){//rule 1
+            nextStepLife.set(false);
+        } else if (isAlive() && (livingNeighbors == 2 || livingNeighbors == 3)) {//rule 2
+            nextStepLife.set(true);
+            gameState.addCellToNextStepQueue(this);
+        } else if (isAlive() && livingNeighbors > 3){// rule 3
+            nextStepLife.set(false);
+        } else if (!isAlive() && livingNeighbors == 3){// rule 4
+            nextStepLife.set(true);
+            gameState.addCellToNextStepQueue(this);   
+        }
         // neighbors[Direction.EAST.ordinal()]
+        //after tested
+        currentStepStateCalculated.set(true);
     }
 
     public int getX() {
@@ -82,7 +96,13 @@ class Cell {
     }
 
     public int getLivingNeighborCount() {
-        return -1;
+        int living = 0;
+        for (int neighbor = 0; neighbor < 8; neighbor++) {
+            if (neighbors[neighbor].isAlive()) {
+                living++;
+            }
+        }
+        return living;
     }
 
     void setCurrentlyAlive(boolean alive) throws IllegalStateException {
