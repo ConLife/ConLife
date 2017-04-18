@@ -1,7 +1,9 @@
 package conlife;
 
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.jar.Pack200;
+
+import static conlife.Rules.Rule.BIRTH;
 
 class Cell {
 
@@ -51,39 +53,67 @@ class Cell {
      * the cell to the next step queue if it has not already been added.
      */
     void determineNextState() {
-        int livingNeighbors = getLivingNeighborCount();
-        if(isAlive() && !gameState.getRules().isSurvive(livingNeighbors)){//rule 1 and 3
-            nextStepLife.set(false);
-            if (livingNeighbors !=0 && !isAddedToNextStepQueue()) {
-                gameState.addCellToNextStepQueue(this);    
-                addedToNextStepQueue.set(true);
-            }
-        } else if (isAlive() && gameState.getRules().isSurvive(livingNeighbors)) {//rule 2
-            nextStepLife.set(true);
-            if (!isAddedToNextStepQueue()) {
-               gameState.addCellToNextStepQueue(this);
-               addedToNextStepQueue.set(true);
-            }
-        } else if (!isAlive() && gameState.getRules().isBirth(livingNeighbors)){// rule 4
-            nextStepLife.set(true);
-            if (!isAddedToNextStepQueue()) {
-                gameState.addCellToNextStepQueue(this);
-                addedToNextStepQueue.set(true);
-            }        
-        } else if (!isAlive() && livingNeighbors != 0){
-            nextStepLife.set(false);
-            if (!isAddedToNextStepQueue()) {
-                gameState.addCellToNextStepQueue(this);
-                addedToNextStepQueue.set(true);
-            }
+        _determineNextState(isAlive(), getLivingNeighborCount());
+    }
+
+    /**
+     * Should only be called by this class or by tests.
+     *
+     * @param alive whether this cell is currently alive or not. The purpose of this is to extract the value from the
+     *              AtomicBoolean - It shouldn't be changing during this but it may be faster to do it this way.
+     * @param livingNeighbors similar to above.
+     */
+    void _determineNextState(boolean alive, int livingNeighbors) {
+        Rules.Rule rule = gameState.getRules().getRule(alive, livingNeighbors);
+        switch (rule) {
+            case UNDER_POPULATION: // Rule 1
+            case OVER_POPULATION: // Rule 3
+                // The cell is going to die and only should be added to next step queue if it has living neighbors
+                prepareForNextState(false, livingNeighbors != 0);
+                break;
+            case SURVIVE: // Rule 2
+                // The cell is going to stay alive and will have to be checked again next step
+                prepareForNextState(true, true);
+                break;
+            case BIRTH: // Rule 4
+                // The cell is going to be born and will have to be checked again next step
+                prepareForNextState(true, true);
+                break;
+            case DEAD_NO_BIRTH:
+                // The cell is dead and will stay dead but if it has any neighbors it will need to be checked next step
+                if (livingNeighbors != 0){
+                    prepareForNextState(false, true);
+                }
+                break;
         }
         // neighbors[Direction.EAST.ordinal()]
         //after tested
         currentStepStateCalculated.set(true);
     }
 
-    void updateToNextState() {
+    /**
+     * Configures the cell for the next step
+     *
+     * @param aliveNextStep whether the cell is alive next step
+     * @param addToNextStepQueue whether this method should add the cell to the next step queue (if not added already)
+     */
+    private void prepareForNextState(boolean aliveNextStep, boolean addToNextStepQueue) {
+        nextStepLife.set(aliveNextStep);
+        if (addToNextStepQueue && !isAddedToNextStepQueue()) {
+            gameState.addCellToNextStepQueue(this);
+            addedToNextStepQueue.set(true);
+        }
+    }
 
+    /**
+     * Sets the cell's current life state to the next life state and resets all other flags to the starting state.
+     */
+    void updateToNextState() {
+        alive.set(isAliveNextStep());
+        nextStepLife.set(false);
+        currentStepStateCalculated.set(false);
+        addedToNextStepQueue.set(false);
+        addedToUpdateQueue.set(false);
     }
 
     public int getX() {

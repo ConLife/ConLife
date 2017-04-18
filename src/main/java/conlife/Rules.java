@@ -5,7 +5,7 @@ import java.text.ParseException;
 class Rules {
 
     enum Rule {
-        BIRTH, SURVIVE, DEATH;
+        BIRTH, SURVIVE, UNDER_POPULATION, OVER_POPULATION, DEAD_NO_BIRTH;
     }
 
     static Rules parseRules(String rulesString) throws ParseException, RulesException {
@@ -51,13 +51,18 @@ class Rules {
         }
     }
 
-    Rule getRule(int numNeighbors) {
-        if (isBirth(numNeighbors)) {
+    public Rule getRule(boolean alive, int numNeighbors) {
+        if (!alive && isBirth(numNeighbors)) {
             return Rule.BIRTH;
-        } else if (isSurvive(numNeighbors)) {
+        } else if (alive && isSurvive(numNeighbors)) {
             return Rule.SURVIVE;
+        } else if (alive && numNeighbors < surviveMin) {
+            return Rule.UNDER_POPULATION;
+        } else if (alive){
+            return Rule.OVER_POPULATION;
+        } else {
+            return Rule.DEAD_NO_BIRTH;
         }
-        return Rule.DEATH;
     }
 
     boolean isBirth(int numNeighbors) {
