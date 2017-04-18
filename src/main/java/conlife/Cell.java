@@ -1,9 +1,6 @@
 package conlife;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.jar.Pack200;
-
-import static conlife.Rules.Rule.BIRTH;
 
 class Cell {
 
@@ -98,6 +95,10 @@ class Cell {
      * @param addToNextStepQueue whether this method should add the cell to the next step queue (if not added already)
      */
     private void prepareForNextState(boolean aliveNextStep, boolean addToNextStepQueue) {
+        if ((isAlive() || aliveNextStep) && !isAddedToUpdateQueue()) {
+            gameState.addCellToUpdateQueue(this);
+            addedToUpdateQueue.set(true);
+        }
         nextStepLife.set(aliveNextStep);
         if (addToNextStepQueue && !isAddedToNextStepQueue()) {
             gameState.addCellToNextStepQueue(this);
