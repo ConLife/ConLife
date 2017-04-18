@@ -88,6 +88,9 @@ public class GameState {
         for (int y = 0; y < boardHeight; y++) {
             for (int x = 0; x < boardWidth; x++) {
                 board[y][x] = new Cell(this, x, y);
+
+                // TEMPORARY TODO REMOVE
+                currentCellQueue.add(board[y][x]);
             }
         }
 
