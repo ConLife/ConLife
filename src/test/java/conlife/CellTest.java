@@ -196,6 +196,7 @@ public class CellTest {
                     assertFalse("Neighbors: " + i, cell.isAddedToUpdateQueue());
                 } else {
                     assertTrue("Neighbors: " + i, cell.isAddedToUpdateQueue());
+                    cell.updateToNextState(); // Needs to be updated/reset
                 }
             }
         }
