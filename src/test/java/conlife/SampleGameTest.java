@@ -10,37 +10,37 @@ import static org.junit.Assert.assertTrue;
 public class SampleGameTest {
 
     private static final String initialCondition
-            = "0000000\n"
-            + "0###000\n"
-            + "0000000\n"
-            + "0000000\n"
-            + "0000000\n"
-            + "000##00\n"
-            + "000##00\n"
-            + "0000000\n"
-            + "0000000";
+            = ".......\n"
+            + ".###...\n"
+            + ".......\n"
+            + ".......\n"
+            + ".......\n"
+            + "...##..\n"
+            + "...##..\n"
+            + ".......\n"
+            + ".......";
 
     private static final String step1
-            = "00#0000\n"
-            + "00#0000\n"
-            + "00#0000\n"
-            + "0000000\n"
-            + "0000000\n"
-            + "000##00\n"
-            + "000##00\n"
-            + "0000000\n"
-            + "0000000";
+            = "..#....\n"
+            + "..#....\n"
+            + "..#....\n"
+            + ".......\n"
+            + ".......\n"
+            + "...##..\n"
+            + "...##..\n"
+            + ".......\n"
+            + ".......";
 
     private static final String step2
-            = "0000000\n"
-            + "0###000\n"
-            + "0000000\n"
-            + "0000000\n"
-            + "0000000\n"
-            + "000##00\n"
-            + "000##00\n"
-            + "0000000\n"
-            + "0000000";
+            = ".......\n"
+            + ".###...\n"
+            + ".......\n"
+            + ".......\n"
+            + ".......\n"
+            + "...##..\n"
+            + "...##..\n"
+            + ".......\n"
+            + ".......";
 
     private GameState game;
 
@@ -51,10 +51,10 @@ public class SampleGameTest {
 
     @Test
     public void testSampleGame() {
-        assertEquals(initialCondition, game.createBoardString('0', '#'));
+        assertEquals(initialCondition, game.createBoardString('.', '#'));
         game.processGameStep();
-        assertEquals(step1, game.createBoardString('0', '#'));
+        assertEquals(step1, game.createBoardString('.', '#'));
         game.processGameStep();
-        assertEquals(step2, game.createBoardString('0', '#'));
+        assertEquals(step2, game.createBoardString('.', '#'));
     }
 }
