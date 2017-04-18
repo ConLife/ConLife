@@ -41,9 +41,9 @@ public class GameState {
     private final int boardWidth, boardHeight;
     private Cell[][] board;
 
-    private final Queue<Cell> currentCellQueue = new ConcurrentLinkedQueue<>();
-    private final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
-    private final Queue<Cell> nextStepCellQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Cell> currentCellQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Cell> nextStepCellQueue = new ConcurrentLinkedQueue<>();
 
     static GameState createNewGame() {
         return createNewGame(DEFAULT_BOARD_SIZE);
@@ -160,20 +160,31 @@ public class GameState {
     // further in class. However, we could probably initialy make it work in serial. I don't think it will be too
     // difficult to change over to parallel.
     public void processGameStep() {
+        _determineCellsNextState();
+        _updateCellStates();
+        _copyNextCellQueueToCurrent();
+        currentStep++;
+    }
+
+    void _determineCellsNextState() {
         Cell cell;
         while ((cell = currentCellQueue.poll()) != null) {
             cell.determineNextState();
         }
+    }
 
+    void _updateCellStates() {
+        Cell cell;
         while ((cell = cellUpdateQueue.poll()) != null) {
             cell.updateToNextState();
         }
+    }
 
+    void _copyNextCellQueueToCurrent() {
+        Cell cell;
         while ((cell = nextStepCellQueue.poll()) != null) {
             currentCellQueue.add(cell);
         }
-
-        currentStep++;
     }
 
     public int getCurrentStep() {
