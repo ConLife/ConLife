@@ -191,7 +191,12 @@ public class CellTest {
                 cell.updateToNextState(); // Needs to be updated/reset
             } else {
                 cell._determineNextState(false, i);
-                assertFalse("Neighbors: " + i, cell.isAddedToUpdateQueue());
+                if (i == 0) {
+                    // Only dead cells with no neighbors don't need an update...
+                    assertFalse("Neighbors: " + i, cell.isAddedToUpdateQueue());
+                } else {
+                    assertTrue("Neighbors: " + i, cell.isAddedToUpdateQueue());
+                }
             }
         }
 

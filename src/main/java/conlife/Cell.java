@@ -95,7 +95,7 @@ class Cell {
      * @param addToNextStepQueue whether this method should add the cell to the next step queue (if not added already)
      */
     private void prepareForNextState(boolean aliveNextStep, boolean addToNextStepQueue) {
-        if ((isAlive() || aliveNextStep) && !isAddedToUpdateQueue()) {
+        if ((addToNextStepQueue || isAlive() || aliveNextStep) && !isAddedToUpdateQueue()) {
             gameState.addCellToUpdateQueue(this);
             addedToUpdateQueue.set(true);
         }
