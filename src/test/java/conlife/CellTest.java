@@ -1,14 +1,11 @@
 package conlife;
 
+import conlife.Rules.Rule;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -29,7 +26,7 @@ public class CellTest {
 
     private Cell getSpyCell(GameState game, int liveNeighborCount) {
         Cell cell = game.getCell(5, 5);
-        cell = Mockito.spy(cell);
+        cell = spy(cell);
         when(cell.getLivingNeighborCount()).thenReturn(liveNeighborCount);
         return cell;
     }
@@ -71,7 +68,7 @@ public class CellTest {
         Cell neighborCell = localCell.getNeighbor(neighborDirection);
         final Cell spyNeighborCell = spy(neighborCell);
         when(spyNeighborCell.isAlive()).thenReturn(true);
-        doReturn(spyNeighborCell).when(localCell).getNeighbor(Matchers.eq(neighborDirection));
+        doReturn(spyNeighborCell).when(localCell).getNeighbor(eq(neighborDirection));
         return neighborCell;
     }
 
@@ -136,7 +133,7 @@ public class CellTest {
     public void testSurvive() throws Exception {
         GameState game = setupGame(); // Due to the way running these tests can work, this is a safety precaution...
         Cell cell = game.getCell(5, 5);
-        cell = Mockito.spy(cell);
+        cell = spy(cell);
         when(cell.isAlive()).thenReturn(true);
 
         when(cell.getLivingNeighborCount()).thenReturn(3);
@@ -150,7 +147,7 @@ public class CellTest {
 
         game = setupGame();
         cell = game.getCell(5, 5);
-        cell = Mockito.spy(cell);
+        cell = spy(cell);
         when(cell.isAlive()).thenReturn(true);
         when(cell.getLivingNeighborCount()).thenReturn(2);
 
@@ -167,7 +164,7 @@ public class CellTest {
             }
             game = setupGame();
             cell = game.getCell(5, 5);
-            cell = Mockito.spy(cell);
+            cell = spy(cell);
             when(cell.isAlive()).thenReturn(true);
 
             when(cell.getLivingNeighborCount()).thenReturn(i);
@@ -180,4 +177,30 @@ public class CellTest {
         }
     }
 
+    @Test
+    public void testAddToUpdateQueue() {
+        Cell cell = game.getCell(5, 5);
+        cell = spy(cell);
+
+        when(cell.isAlive()).thenReturn(false);
+        for (int i = 0; i < 9; i++) {
+            Rule rule = game.getRules().getRule(false, i);
+            if (rule == Rule.BIRTH) {
+                cell._determineNextState(false, i);
+                assertTrue("Neighbors: " + i, cell.isAddedToUpdateQueue()); // Needs to be updated
+                cell.updateToNextState(); // Needs to be updated/reset
+            } else {
+                cell._determineNextState(false, i);
+                assertFalse("Neighbors: " + i, cell.isAddedToUpdateQueue());
+            }
+        }
+
+        when(cell.isAlive()).thenReturn(true);
+        // In every case of the cell being alive, the next state needs to be shifted to current state
+        for (int i = 0; i < 9; i++) {
+            cell._determineNextState(true, i);
+            assertTrue("Neighbors: " + i, cell.isAddedToUpdateQueue());
+            cell.updateToNextState(); // Needs to be updated/reset
+        }
+    }
 }
