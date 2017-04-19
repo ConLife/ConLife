@@ -65,7 +65,7 @@ public class SampleGameFilledSquareTest {
 
         game._determineCellsNextState();
         assertTrue(cell.isAddedToNextStepQueue().get());
-        assertTrue(cell.isAddedToUpdateQueue());
+        assertTrue(cell.isAddedToUpdateQueue().get());
         game._updateCellStates();
         game._copyNextCellQueueToCurrent();
         assertEquals(step1, game.createBoardString('.', '#'));

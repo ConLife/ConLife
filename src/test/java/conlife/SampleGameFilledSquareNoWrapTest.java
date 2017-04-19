@@ -134,8 +134,13 @@ public class SampleGameFilledSquareNoWrapTest {
         game.processGameStep();
         assertEquals("Step: " + game.getCurrentStep(), step1, game.createBoardString('.', '#'));
 
+        Cell neighbor = game.getCell(5, 3);
+        assertTrue(game.currentCellQueue.contains(neighbor));
+        assertEquals(Rules.Rule.SURVIVE, game.getRules().getRule(neighbor.isAlive(), neighbor.getLivingNeighborCount()));
         game._determineCellsNextState();
+        assertTrue(neighbor.isAliveNextStep());
         game._updateCellStates();
+        assertTrue(game.nextStepCellQueue.contains(cell));
         game._copyNextCellQueueToCurrent();
         game._incrementGameStep();
         assertEquals("Step: " + game.getCurrentStep(), step2, game.createBoardString('.', '#'));

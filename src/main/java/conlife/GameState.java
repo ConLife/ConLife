@@ -136,16 +136,10 @@ public class GameState {
     }
 
     void addCellToNextStepQueue(Cell cell) {
-//        if (cell.isAddedToNextStepQueue().get()) {
-//            throw new IllegalStateException("Cell has already been added to the next state queue");
-//        }
         nextStepCellQueue.add(cell);
     }
 
     void addCellToUpdateQueue(Cell cell) {
-        if (cell.isAddedToUpdateQueue()) {
-            throw new IllegalStateException("Cell has already been added to the update queue");
-        }
         cellUpdateQueue.add(cell);
     }
 

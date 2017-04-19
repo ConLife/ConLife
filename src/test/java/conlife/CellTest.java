@@ -187,15 +187,15 @@ public class CellTest {
             Rule rule = game.getRules().getRule(false, i);
             if (rule == Rule.BIRTH) {
                 cell._determineNextState(false, i);
-                assertTrue("Neighbors: " + i, cell.isAddedToUpdateQueue()); // Needs to be updated
+                assertTrue("Neighbors: " + i, cell.isAddedToUpdateQueue().get()); // Needs to be updated
                 cell.updateToNextState(); // Needs to be updated/reset
             } else {
                 cell._determineNextState(false, i);
                 if (i == 0) {
                     // Only dead cells with no neighbors don't need an update...
-                    assertFalse("Neighbors: " + i, cell.isAddedToUpdateQueue());
+                    assertFalse("Neighbors: " + i, cell.isAddedToUpdateQueue().get());
                 } else {
-                    assertTrue("Neighbors: " + i, cell.isAddedToUpdateQueue());
+                    assertTrue("Neighbors: " + i, cell.isAddedToUpdateQueue().get());
                     cell.updateToNextState(); // Needs to be updated/reset
                 }
             }
@@ -205,7 +205,7 @@ public class CellTest {
         // In every case of the cell being alive, the next state needs to be shifted to current state
         for (int i = 0; i < 9; i++) {
             cell._determineNextState(true, i);
-            assertTrue("Neighbors: " + i, cell.isAddedToUpdateQueue());
+            assertTrue("Neighbors: " + i, cell.isAddedToUpdateQueue().get());
             cell.updateToNextState(); // Needs to be updated/reset
         }
     }

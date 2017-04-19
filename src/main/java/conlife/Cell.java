@@ -95,9 +95,8 @@ class Cell {
      * @param addToNextStepQueue whether this method should add the cell to the next step queue (if not added already)
      */
     private void prepareForNextState(boolean aliveNextStep, boolean addToNextStepQueue) {
-        if ((addToNextStepQueue || isAlive() || aliveNextStep) && !isAddedToUpdateQueue()) {
-            gameState.addCellToUpdateQueue(this);
-            addedToUpdateQueue.set(true);
+        if ((addToNextStepQueue || isAlive() || aliveNextStep)) {
+            addToUpdateQueueIfNotAdded();
         }
         nextStepLife.set(aliveNextStep);
         if (addToNextStepQueue) {
@@ -113,6 +112,13 @@ class Cell {
     private void addToNextStepQueueIfNotAdded() {
         if (addedToNextStepQueue.compareAndSet(false, true)) {
             gameState.addCellToNextStepQueue(this);
+            addToUpdateQueueIfNotAdded();
+        }
+    }
+
+    private void addToUpdateQueueIfNotAdded() {
+        if (addedToUpdateQueue.compareAndSet(false, true)) {
+            gameState.addCellToUpdateQueue(this);
         }
     }
 
@@ -155,8 +161,8 @@ class Cell {
         return addedToNextStepQueue;
     }
 
-    public boolean isAddedToUpdateQueue() {
-        return addedToUpdateQueue.get();
+    public AtomicBoolean isAddedToUpdateQueue() {
+        return addedToUpdateQueue;
     }
 
     public int getLivingNeighborCount() {
