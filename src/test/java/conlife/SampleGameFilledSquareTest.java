@@ -43,11 +43,11 @@ public class SampleGameFilledSquareTest {
     private static final String step3
             = "...##...\n"
             + "...##...\n"
-            + "........\n"
-            + "##....##\n"
-            + "##....##\n"
-            + "##....##\n"
-            + "........\n"
+            + "...##...\n"
+            + "###..###\n"
+            + "###..###\n"
+            + "###..###\n"
+            + "...##...\n"
             + "...##...\n"
             + "...##...";
 
@@ -64,7 +64,7 @@ public class SampleGameFilledSquareTest {
         assertEquals(initialCondition, game.createBoardString('.', '#'));
 
         game._determineCellsNextState();
-        assertTrue(cell.isAddedToNextStepQueue());
+        assertTrue(cell.isAddedToNextStepQueue().get());
         assertTrue(cell.isAddedToUpdateQueue());
         game._updateCellStates();
         game._copyNextCellQueueToCurrent();
@@ -72,9 +72,9 @@ public class SampleGameFilledSquareTest {
 
         //game.processGameStep();
         assertTrue(game.currentCellQueue.contains(cell));
-        assertFalse(cell.isAddedToNextStepQueue());
+        assertFalse(cell.isAddedToNextStepQueue().get());
         game._determineCellsNextState();
-        assertTrue(cell.isAddedToNextStepQueue());
+        assertTrue(cell.isAddedToNextStepQueue().get());
         assertTrue(game.nextStepCellQueue.contains(cell));
         game._updateCellStates();
         game._copyNextCellQueueToCurrent();

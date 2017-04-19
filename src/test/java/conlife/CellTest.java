@@ -37,7 +37,7 @@ public class CellTest {
         assertFalse(cell.isAlive());
         assertFalse(cell.isAliveNextStep());
         assertFalse(cell.isStateCalculatedThisStep());
-        assertFalse(cell.isAddedToNextStepQueue());
+        assertFalse(cell.isAddedToNextStepQueue().get());
     }
 
     @Test
@@ -94,7 +94,7 @@ public class CellTest {
         assertTrue(cell.isStateCalculatedThisStep());
         assertFalse(cell.isAlive());
         assertTrue(cell.isAliveNextStep());
-        assertTrue(cell.isAddedToNextStepQueue());
+        assertTrue(cell.isAddedToNextStepQueue().get());
 
         for (int i = 0; i < 9; i++) {
             if (i == 3) {
@@ -111,10 +111,10 @@ public class CellTest {
             assertFalse(cell.isAliveNextStep());
             if (i == 0) {
                 // If there are no neighbors, and this cell is dead, it won't be checked next step
-                assertFalse(cell.isAddedToNextStepQueue());
+                assertFalse(cell.isAddedToNextStepQueue().get());
             } else {
                 // But if there are any number of neighbors alive, it will be checked next step
-                assertTrue(cell.isAddedToNextStepQueue());
+                assertTrue(cell.isAddedToNextStepQueue().get());
             }
         }
 

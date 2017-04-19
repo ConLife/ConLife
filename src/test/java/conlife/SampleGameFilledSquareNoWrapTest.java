@@ -128,25 +128,36 @@ public class SampleGameFilledSquareNoWrapTest {
 
     @Test
     public void testSampleGame() {
-        Cell cell = game.getCell(0,1);
-        assertEquals(initialCondition, game.createBoardString('.', '#'));
+        Cell cell = game.getCell(5, 2);
+        assertEquals("Step: " + game.getCurrentStep(), initialCondition, game.createBoardString('.', '#'));
 
         game.processGameStep();
-        assertEquals(step1, game.createBoardString('.', '#'));
+        assertEquals("Step: " + game.getCurrentStep(), step1, game.createBoardString('.', '#'));
+
+        game._determineCellsNextState();
+        game._updateCellStates();
+        game._copyNextCellQueueToCurrent();
+        game._incrementGameStep();
+        assertEquals("Step: " + game.getCurrentStep(), step2, game.createBoardString('.', '#'));
+
+
+        assertEquals(3, cell.getLivingNeighborCount());
+        assertFalse(cell.isAlive());
+        assertTrue(game.currentCellQueue.contains(cell));
+        game._determineCellsNextState();
+        assertTrue(cell.isAliveNextStep());
+        game._updateCellStates();
+        game._copyNextCellQueueToCurrent();
+        game._incrementGameStep();
+        assertEquals("Step: " + game.getCurrentStep(), step3, game.createBoardString('.', '#'));
 
         game.processGameStep();
-        assertEquals(step2, game.createBoardString('.', '#'));
+        assertEquals("Step: " + game.getCurrentStep(), step4, game.createBoardString('.', '#'));
 
         game.processGameStep();
-        assertEquals(step3, game.createBoardString('.', '#'));
+        assertEquals("Step: " + game.getCurrentStep(), step5, game.createBoardString('.', '#'));
 
         game.processGameStep();
-        assertEquals(step4, game.createBoardString('.', '#'));
-
-        game.processGameStep();
-        assertEquals(step5, game.createBoardString('.', '#'));
-
-        game.processGameStep();
-        assertEquals(step6, game.createBoardString('.', '#'));
+        assertEquals("Step: " + game.getCurrentStep(), step6, game.createBoardString('.', '#'));
     }
 }

@@ -100,9 +100,19 @@ class Cell {
             addedToUpdateQueue.set(true);
         }
         nextStepLife.set(aliveNextStep);
-        if (addToNextStepQueue && !isAddedToNextStepQueue()) {
+        if (addToNextStepQueue) {
+            addToNextStepQueueIfNotAdded();
+        }
+        if (aliveNextStep) {
+            for (Direction d : Direction.values()) {
+                getNeighbor(d).addToNextStepQueueIfNotAdded();
+            }
+        }
+    }
+
+    private void addToNextStepQueueIfNotAdded() {
+        if (addedToNextStepQueue.compareAndSet(false, true)) {
             gameState.addCellToNextStepQueue(this);
-            addedToNextStepQueue.set(true);
         }
     }
 
@@ -141,8 +151,8 @@ class Cell {
         return currentStepStateCalculated.get();
     }
 
-    public boolean isAddedToNextStepQueue() {
-        return addedToNextStepQueue.get();
+    public AtomicBoolean isAddedToNextStepQueue() {
+        return addedToNextStepQueue;
     }
 
     public boolean isAddedToUpdateQueue() {

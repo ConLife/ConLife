@@ -136,9 +136,9 @@ public class GameState {
     }
 
     void addCellToNextStepQueue(Cell cell) {
-        if (cell.isAddedToNextStepQueue()) {
-            throw new IllegalStateException("Cell has already been added to the next state queue");
-        }
+//        if (cell.isAddedToNextStepQueue().get()) {
+//            throw new IllegalStateException("Cell has already been added to the next state queue");
+//        }
         nextStepCellQueue.add(cell);
     }
 
@@ -163,7 +163,7 @@ public class GameState {
         _determineCellsNextState();
         _updateCellStates();
         _copyNextCellQueueToCurrent();
-        currentStep++;
+        _incrementGameStep();
     }
 
     void _determineCellsNextState() {
@@ -185,6 +185,10 @@ public class GameState {
         while ((cell = nextStepCellQueue.poll()) != null) {
             currentCellQueue.add(cell);
         }
+    }
+
+    void _incrementGameStep() {
+        currentStep++;
     }
 
     public int getCurrentStep() {
