@@ -2,8 +2,9 @@ package conlife;
 
 import java.awt.Dimension;
 import java.text.ParseException;
+import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
 
 public class GameState {
 
@@ -37,11 +38,13 @@ public class GameState {
     private int currentStep = 0;
     private int maxStep = -1;
 
+    private final ExecutorService threadPool = Executors.newFixedThreadPool(4);
+
     private final Rules rules;
     private final int boardWidth, boardHeight;
     private Cell[][] board;
 
-    final Queue<Cell> currentCellQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Callable<Cell>> currentCellQueue = new ConcurrentLinkedQueue<>();
     final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
     final Queue<Cell> nextStepCellQueue = new ConcurrentLinkedQueue<>();
 
@@ -87,10 +90,11 @@ public class GameState {
 
         for (int y = 0; y < boardHeight; y++) {
             for (int x = 0; x < boardWidth; x++) {
-                board[y][x] = new Cell(this, x, y);
+                final Cell cell = new Cell(this, x, y);
+                board[y][x] = cell;
 
                 // TEMPORARY TODO REMOVE
-                currentCellQueue.add(board[y][x]);
+                currentCellQueue.add(() -> {cell.determineNextState(); return cell;});
             }
         }
 
@@ -161,10 +165,12 @@ public class GameState {
     }
 
     void _determineCellsNextState() {
-        Cell cell;
-        while ((cell = currentCellQueue.poll()) != null) {
-            cell.determineNextState();
-        }
+//        while (!currentCellQueue.isEmpty()) {
+//            final Cell cell = currentCellQueue.poll();
+//            threadPool.submit(() -> {cell.determineNextState();});
+//            threadPool.invok
+//        }
+        List<Future> results = threadPool.invokeAll(currentCellQueue);
     }
 
     void _updateCellStates() {
@@ -177,7 +183,7 @@ public class GameState {
     void _copyNextCellQueueToCurrent() {
         Cell cell;
         while ((cell = nextStepCellQueue.poll()) != null) {
-            currentCellQueue.add(cell);
+            currentCellQueue.add(() -> {cell.determineNextState(); return cell;});
         }
     }
 
