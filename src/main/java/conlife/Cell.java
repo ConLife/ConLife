@@ -126,12 +126,16 @@ class Cell {
     /**
      * Sets the cell's current life state to the next life state and resets all other flags to the starting state.
      */
-    void updateToNextState() {
-        alive.set(isAliveNextStep());
+    boolean updateToNextState() {
+        boolean result;
+        boolean aliveNextStep = isAliveNextStep();
+        result = aliveNextStep != alive.get();
+        alive.set(aliveNextStep);
         nextStepLife.set(false);
         currentStepStateCalculated.set(false);
         addedToNextStepQueue.set(false);
         addedToUpdateQueue.set(false);
+        return result;
     }
 
     public int getX() {
@@ -177,9 +181,6 @@ class Cell {
     }
 
     void setCurrentlyAlive(boolean alive) throws IllegalStateException {
-        if (gameState.getCurrentStep() > 0) {
-            throw new IllegalStateException("Cannot set cell life after game has started");
-        }
         this.alive.set(alive);
     }
 

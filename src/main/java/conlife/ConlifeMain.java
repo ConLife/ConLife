@@ -7,15 +7,22 @@ import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.awt.GLJPanel;
 import net.miginfocom.swing.MigLayout;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import javax.swing.*;
 import javax.swing.text.MaskFormatter;
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.event.*;
 import java.text.ParseException;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class ConlifeMain extends JFrame {
+
+    private static enum MouseState {
+        DRAWING_ON, DRAWING_OFF, NOT_DRAWING
+    }
 
     private static final Pattern rulesPattern = Pattern.compile("B\\d+\\/S\\d+");
 
@@ -29,6 +36,11 @@ public class ConlifeMain extends JFrame {
     }
 
     private final CellComponent[][] board = new CellComponent[100][100];
+    private int boardLeftInset = 0, boardTopInset = 0;
+    private int boardWidth = 0, boardHeight = 0;
+    private MouseState drawing = MouseState.NOT_DRAWING;
+    private GameState gameState = GameState.createNewGame();
+    private Set<CellComponent> cellsThatChangedState = new HashSet<>();
 
     private ConlifeMain() {
         setTitle("Conway's Game of Life (with Concurrency!)");
@@ -104,18 +116,74 @@ public class ConlifeMain extends JFrame {
 
         DrawPanel gamePanel = new DrawPanel();
         gamePanel.setBorder(BorderFactory.createEtchedBorder());
+        MouseAdapter mouseAdapter = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                CellComponent cell = getCell(e.getPoint());
+                if (cell == null) {
+                    return;
+                }
+                if (cell.isAlive()) {
+                    drawing = MouseState.DRAWING_OFF;
+                    if (cell.setAlive(false)) {
+                        cellsThatChangedState.add(cell);
+                    }
+                } else {
+                    drawing = MouseState.DRAWING_ON;
+                    if (cell.setAlive(true)) {
+                        cellsThatChangedState.add(cell);
+                    }
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                drawing = MouseState.NOT_DRAWING;
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                drawing = MouseState.NOT_DRAWING;
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (drawing == MouseState.NOT_DRAWING) {
+                    return;
+                }
+                CellComponent cell = getCell(e.getPoint());
+                if (cell == null) {
+                    return;
+                }
+                if (drawing == MouseState.DRAWING_ON) {
+                    if (cell.setAlive(true)) {
+                        cellsThatChangedState.add(cell);
+                    }
+                } else {
+                    if (cell.setAlive(false)) {
+                        cellsThatChangedState.add(cell);
+                    }
+                }
+            }
+        };
+        gamePanel.addMouseMotionListener(mouseAdapter);
+        gamePanel.addMouseListener(mouseAdapter);
 
         //CellComponent cellComponent = new CellComponent();
         //gamePanel.add(cellComponent);
 
         Insets insets = gamePanel.getInsets();
+        boardLeftInset = insets.left;
+        boardTopInset = insets.top;
+        boardWidth = 100 * CellComponent.CELL_SIZE;
+        boardHeight = 100 * CellComponent.CELL_SIZE;
 
         for (int i = 0; i < 100; i++) {
             for (int j = 0; j < 100; j++) {
-                board[j][i] = new CellComponent();
+                board[j][i] = new CellComponent(i, j);
                 gamePanel.add(board[j][i]);
                 Dimension size = board[j][i].getPreferredSize();
-                board[j][i].setBounds(i * 5 + insets.left, j * 5 + insets.top, size.width, size.height);
+                board[j][i].setBounds(i * CellComponent.CELL_SIZE + insets.left, j * CellComponent.CELL_SIZE + insets.top, size.width, size.height);
             }
         }
 
@@ -159,7 +227,12 @@ public class ConlifeMain extends JFrame {
         stopButton.setEnabled(false);
         buttonsPanel.add(stopButton, "center, growx");
         JButton stepButton = new JButton("Step");
-        stepButton.setEnabled(false);
+        stepButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                step();
+            }
+        });
         buttonsPanel.add(stepButton, "center, growx");
 
         panel.add(settingPanel, "growx, wrap");
@@ -167,9 +240,29 @@ public class ConlifeMain extends JFrame {
         panel.add(buttonsPanel, "growx");
 
         insets = gamePanel.getInsets();
-        this.setPreferredSize(new Dimension(550, 700));
+        this.setPreferredSize(new Dimension(CellComponent.CELL_SIZE * 100 + 50, CellComponent.CELL_SIZE * 100 + 200));
         return panel;
     }
 
+    CellComponent getCell(Point p) {
+        if (p.x < boardLeftInset || p.y < boardTopInset || p.x >= boardLeftInset + boardWidth || p.y >= boardTopInset + boardHeight) {
+            return null;
+        }
+        int x = (p.x - boardLeftInset) / CellComponent.CELL_SIZE;
+        int y = (p.y - boardTopInset) / CellComponent.CELL_SIZE;
+        return board[y][x];
+    }
 
+    private void step() {
+        for (CellComponent cellComponent : cellsThatChangedState) {
+            Cell cell = gameState.getCell(cellComponent.getCellX(), cellComponent.getCellY());
+            cell.setCurrentlyAlive(cellComponent.isAlive());
+        }
+        gameState.processGameStep();
+        Collection<Cell> cellUpdates = gameState.getCellsThatChangedState();
+        for (Cell cell : cellUpdates) {
+            CellComponent cellComponent = board[cell.getY()][cell.getX()];
+            cellComponent.setAlive(cell.isAlive());
+        }
+    }
 }

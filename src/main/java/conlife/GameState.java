@@ -2,6 +2,7 @@ package conlife;
 
 import java.awt.Dimension;
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
@@ -48,6 +49,8 @@ public class GameState {
     final Queue<Callable<Void>> currentCellQueue = new ConcurrentLinkedQueue<>();
     final Queue<Callable<Void>> cellUpdateQueue = new ConcurrentLinkedQueue<>();
     final Queue<Callable<Void>> nextStepCellQueue = new ConcurrentLinkedQueue<>();
+
+    final Queue<Cell> cellsThatChangedState = new ConcurrentLinkedQueue<>();
 
     static GameState createNewGame() {
         return createNewGame(DEFAULT_BOARD_SIZE);
@@ -155,7 +158,9 @@ public class GameState {
 
     void addCellToUpdateQueue(Cell cell) {
         cellUpdateQueue.add(() -> {
-            cell.updateToNextState();
+            if (cell.updateToNextState()) {
+                cellsThatChangedState.add(cell);
+            }
             return null;
         });
     }
@@ -171,6 +176,7 @@ public class GameState {
     // further in class. However, we could probably initialy make it work in serial. I don't think it will be too
     // difficult to change over to parallel.
     public void processGameStep() {
+        cellsThatChangedState.clear();
         _determineCellsNextState();
         _updateCellStates();
         _copyNextCellQueueToCurrent();
@@ -217,6 +223,10 @@ public class GameState {
             throw new IllegalArgumentException("Max step must be greater than 0");
         }
         this.maxStep = maxStep;
+    }
+
+    public Collection<Cell> getCellsThatChangedState() {
+        return cellsThatChangedState;
     }
 
     public int getMaxStep() {
