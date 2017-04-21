@@ -28,6 +28,8 @@ public class ConlifeMain extends JFrame {
         SwingUtilities.invokeLater(() -> new ConlifeMain().setVisible(true));
     }
 
+    private final CellComponent[][] board = new CellComponent[100][100];
+
     private ConlifeMain() {
         setTitle("Conway's Game of Life (with Concurrency!)");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -38,7 +40,7 @@ public class ConlifeMain extends JFrame {
             System.err.println("Could not create the GUI");
             System.exit(1);
         }
-        setPreferredSize(new Dimension(900, 700));
+        //setPreferredSize(new Dimension(900, 700));
         pack();
         setLocationRelativeTo(null);
     }
@@ -101,14 +103,27 @@ public class ConlifeMain extends JFrame {
         settingPanel.add(stepField, "growx");
 
         DrawPanel gamePanel = new DrawPanel();
+        gamePanel.setBorder(BorderFactory.createEtchedBorder());
 
-        CellComponent cellComponent = new CellComponent();
-        gamePanel.add(cellComponent);
+        //CellComponent cellComponent = new CellComponent();
+        //gamePanel.add(cellComponent);
 
         Insets insets = gamePanel.getInsets();
-        Dimension size = cellComponent.getPreferredSize();
-        cellComponent.setBounds(25 + insets.left, 5 + insets.top,
-                size.width, size.height);
+
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 100; j++) {
+                board[j][i] = new CellComponent();
+                gamePanel.add(board[j][i]);
+                Dimension size = board[j][i].getPreferredSize();
+                board[j][i].setBounds(i * 5 + insets.left, j * 5 + insets.top, size.width, size.height);
+            }
+        }
+
+
+
+//        Dimension size = cellComponent.getPreferredSize();
+//        cellComponent.setBounds(25 + insets.left, 5 + insets.top,
+//                size.width, size.height);
 
 //        GLProfile glprofile = GLProfile.getDefault();
 //        GLCapabilities glcapabilities = new GLCapabilities(glprofile);
@@ -151,6 +166,8 @@ public class ConlifeMain extends JFrame {
         panel.add(gamePanel, "growx, growy, wrap");
         panel.add(buttonsPanel, "growx");
 
+        insets = gamePanel.getInsets();
+        this.setPreferredSize(new Dimension(550, 700));
         return panel;
     }
 

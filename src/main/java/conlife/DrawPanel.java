@@ -13,7 +13,7 @@ public class DrawPanel extends JPanel {
     protected void printComponent(Graphics g) {
         super.printComponent(g);
         Graphics2D g2 = (Graphics2D) g;
-        g2.setPaint(Color.black);
+        g2.setPaint(Color.white);
         g2.fillRect(0, 0, getWidth(), getHeight());
     }
 
