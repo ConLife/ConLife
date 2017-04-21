@@ -100,27 +100,37 @@ public class ConlifeMain extends JFrame {
         settingPanel.add(stepLabel, "");
         settingPanel.add(stepField, "growx");
 
-        GLProfile glprofile = GLProfile.getDefault();
-        GLCapabilities glcapabilities = new GLCapabilities(glprofile);
-        GLJPanel gamePanel = new GLJPanel(glcapabilities);
+        DrawPanel gamePanel = new DrawPanel();
 
-        gamePanel.addGLEventListener( new GLEventListener() {
-            @Override
-            public void reshape(GLAutoDrawable glAutoDrawable, int x, int y, int width, int height ) {
-                OneTriangle.setup( glAutoDrawable.getGL().getGL2(), width, height );
-            }
+        CellComponent cellComponent = new CellComponent();
+        gamePanel.add(cellComponent);
 
-            @Override
-            public void init( GLAutoDrawable glAutoDrawable ) {}
+        Insets insets = gamePanel.getInsets();
+        Dimension size = cellComponent.getPreferredSize();
+        cellComponent.setBounds(25 + insets.left, 5 + insets.top,
+                size.width, size.height);
 
-            @Override
-            public void dispose( GLAutoDrawable glAutoDrawable ) {}
-
-            @Override
-            public void display( GLAutoDrawable glAutoDrawable ) {
-                OneTriangle.render( glAutoDrawable.getGL().getGL2(), glAutoDrawable.getSurfaceWidth(), glAutoDrawable.getSurfaceHeight() );
-            }
-        });
+//        GLProfile glprofile = GLProfile.getDefault();
+//        GLCapabilities glcapabilities = new GLCapabilities(glprofile);
+//        GLJPanel gamePanel = new GLJPanel(glcapabilities);
+//
+//        gamePanel.addGLEventListener( new GLEventListener() {
+//            @Override
+//            public void reshape(GLAutoDrawable glAutoDrawable, int x, int y, int width, int height ) {
+//                OneTriangle.setup( glAutoDrawable.getGL().getGL2(), width, height );
+//            }
+//
+//            @Override
+//            public void init( GLAutoDrawable glAutoDrawable ) {}
+//
+//            @Override
+//            public void dispose( GLAutoDrawable glAutoDrawable ) {}
+//
+//            @Override
+//            public void display( GLAutoDrawable glAutoDrawable ) {
+//                OneTriangle.render( glAutoDrawable.getGL().getGL2(), glAutoDrawable.getSurfaceWidth(), glAutoDrawable.getSurfaceHeight() );
+//            }
+//        });
 
         JPanel buttonsPanel = new JPanel(new MigLayout("fill", "[grow][grow][grow][grow]", ""));
         buttonsPanel.setBorder(BorderFactory.createEtchedBorder());
