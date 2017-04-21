@@ -167,16 +167,8 @@ public class GameState {
 
     void _determineCellsNextState() {
         try {
-            List<Future<Rules.Rule>> results = threadPool.invokeAll(currentCellQueue);
+            threadPool.invokeAll(currentCellQueue);
             currentCellQueue.clear();
-            // This part is a long winded way of getting the main thread to wait until all the cells are processed.
-            // TODO Determine if it is even necessary...
-//            Iterator<Future<Rules.Rule>> it = results.iterator();
-//            while (it.hasNext()) {
-//                Future<Rules.Rule> result = it.next();
-//                result.get();
-//                it.remove();
-//            }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
