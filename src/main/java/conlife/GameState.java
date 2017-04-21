@@ -2,6 +2,7 @@ package conlife;
 
 import java.awt.Dimension;
 import java.text.ParseException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
@@ -44,7 +45,7 @@ public class GameState {
     private final int boardWidth, boardHeight;
     private Cell[][] board;
 
-    final Queue<Callable<Cell>> currentCellQueue = new ConcurrentLinkedQueue<>();
+    final Queue<CellWorker> currentCellQueue = new ConcurrentLinkedQueue<>();
     final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
     final Queue<Cell> nextStepCellQueue = new ConcurrentLinkedQueue<>();
 
@@ -94,7 +95,7 @@ public class GameState {
                 board[y][x] = cell;
 
                 // TEMPORARY TODO REMOVE
-                currentCellQueue.add(() -> {cell.determineNextState(); return cell;});
+                currentCellQueue.add(new CellWorker(cell));
             }
         }
 
@@ -165,12 +166,20 @@ public class GameState {
     }
 
     void _determineCellsNextState() {
-//        while (!currentCellQueue.isEmpty()) {
-//            final Cell cell = currentCellQueue.poll();
-//            threadPool.submit(() -> {cell.determineNextState();});
-//            threadPool.invok
-//        }
-        List<Future> results = threadPool.invokeAll(currentCellQueue);
+        try {
+            List<Future<Rules.Rule>> results = threadPool.invokeAll(currentCellQueue);
+            currentCellQueue.clear();
+            // This part is a long winded way of getting the main thread to wait until all the cells are processed.
+            // TODO Determine if it is even necessary...
+//            Iterator<Future<Rules.Rule>> it = results.iterator();
+//            while (it.hasNext()) {
+//                Future<Rules.Rule> result = it.next();
+//                result.get();
+//                it.remove();
+//            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     void _updateCellStates() {
@@ -183,7 +192,9 @@ public class GameState {
     void _copyNextCellQueueToCurrent() {
         Cell cell;
         while ((cell = nextStepCellQueue.poll()) != null) {
-            currentCellQueue.add(() -> {cell.determineNextState(); return cell;});
+            //final Cell copy = cell;
+            currentCellQueue.add(new CellWorker(cell));
+            //currentCellQueue.add(() -> {copy.determineNextState(); return copy;});
         }
     }
 

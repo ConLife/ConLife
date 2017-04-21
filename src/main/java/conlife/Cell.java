@@ -49,8 +49,8 @@ class Cell {
      * of this cell. Afterwards, it flags this cell that it has calculated its state for this step. This should also add
      * the cell to the next step queue if it has not already been added.
      */
-    void determineNextState() {
-        _determineNextState(isAlive(), getLivingNeighborCount());
+    Rules.Rule determineNextState() {
+        return _determineNextState(isAlive(), getLivingNeighborCount());
     }
 
     /**
@@ -60,7 +60,7 @@ class Cell {
      *              AtomicBoolean - It shouldn't be changing during this but it may be faster to do it this way.
      * @param livingNeighbors similar to above.
      */
-    void _determineNextState(boolean alive, int livingNeighbors) {
+    Rules.Rule _determineNextState(boolean alive, int livingNeighbors) {
         Rules.Rule rule = gameState.getRules().getRule(alive, livingNeighbors);
         switch (rule) {
             case UNDER_POPULATION: // Rule 1
@@ -86,6 +86,7 @@ class Cell {
         // neighbors[Direction.EAST.ordinal()]
         //after tested
         currentStepStateCalculated.set(true);
+        return rule;
     }
 
     /**
@@ -180,5 +181,18 @@ class Cell {
             throw new IllegalStateException("Cannot set cell life after game has started");
         }
         this.alive.set(alive);
+    }
+
+    @Override
+    public String toString() {
+        return "Cell{" +
+                "x=" + x +
+                ", y=" + y +
+                ", alive=" + alive +
+                ", nextStepLife=" + nextStepLife +
+                ", currentStepStateCalculated=" + currentStepStateCalculated +
+                ", addedToNextStepQueue=" + addedToNextStepQueue +
+                ", addedToUpdateQueue=" + addedToUpdateQueue +
+                '}';
     }
 }
