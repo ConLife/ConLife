@@ -45,9 +45,9 @@ public class GameState {
     private final int boardWidth, boardHeight;
     private Cell[][] board;
 
-    final Queue<CellWorker> currentCellQueue = new ConcurrentLinkedQueue<>();
-    final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
-    final Queue<Cell> nextStepCellQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Callable<Void>> currentCellQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Callable<Void>> cellUpdateQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Callable<Void>> nextStepCellQueue = new ConcurrentLinkedQueue<>();
 
     static GameState createNewGame() {
         return createNewGame(DEFAULT_BOARD_SIZE);
@@ -95,7 +95,10 @@ public class GameState {
                 board[y][x] = cell;
 
                 // TEMPORARY TODO REMOVE
-                currentCellQueue.add(new CellWorker(cell));
+                currentCellQueue.add(() -> {
+                    cell.determineNextState();
+                    return null;
+                });
             }
         }
 
@@ -141,11 +144,20 @@ public class GameState {
     }
 
     void addCellToNextStepQueue(Cell cell) {
-        nextStepCellQueue.add(cell);
+        nextStepCellQueue.add(() -> {
+            currentCellQueue.add(() -> {
+                cell.determineNextState();
+                return null;
+            });
+            return null;
+        });
     }
 
     void addCellToUpdateQueue(Cell cell) {
-        cellUpdateQueue.add(cell);
+        cellUpdateQueue.add(() -> {
+            cell.updateToNextState();
+            return null;
+        });
     }
 
     /**
@@ -175,18 +187,20 @@ public class GameState {
     }
 
     void _updateCellStates() {
-        Cell cell;
-        while ((cell = cellUpdateQueue.poll()) != null) {
-            cell.updateToNextState();
+        try {
+            threadPool.invokeAll(cellUpdateQueue);
+            cellUpdateQueue.clear();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
     void _copyNextCellQueueToCurrent() {
-        Cell cell;
-        while ((cell = nextStepCellQueue.poll()) != null) {
-            //final Cell copy = cell;
-            currentCellQueue.add(new CellWorker(cell));
-            //currentCellQueue.add(() -> {copy.determineNextState(); return copy;});
+        try {
+            threadPool.invokeAll(nextStepCellQueue);
+            nextStepCellQueue.clear();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
