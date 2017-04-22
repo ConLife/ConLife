@@ -1,7 +1,24 @@
 package conlife;
 
 public class CellUpdate {
-    public static enum StateChange {
-        ALIVE_TO_DEAD, DEAD_TO_ALIVE, NO_CHANGE;
+    private final int x, y;
+    private final boolean alive;
+
+    public CellUpdate(int x, int y, boolean alive) {
+        this.x = x;
+        this.y = y;
+        this.alive = alive;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public boolean isAlive() {
+        return alive;
     }
 }

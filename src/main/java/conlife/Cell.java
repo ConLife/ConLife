@@ -1,5 +1,6 @@
 package conlife;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 class Cell {
@@ -180,8 +181,28 @@ class Cell {
         return living;
     }
 
-    void setCurrentlyAlive(boolean alive) throws IllegalStateException {
-        this.alive.set(alive);
+    /**
+     * Sets whether the cell is currently alive. If this is different than before, the cell is added to the game cell
+     * queue.
+     *
+     * @param alive whether the cell should be alive currently.
+     */
+    void setCurrentlyAlive(boolean alive) {
+        boolean previous = this.alive.getAndSet(alive);
+        if (previous != alive) {
+            CellStateDeterminer cellStateDeterminer = new CellStateDeterminer(this);
+            if (!gameState.currentCellQueue.contains(cellStateDeterminer)) {
+                gameState.currentCellQueue.add(cellStateDeterminer);
+            }
+            for (Direction d : Direction.values()) {
+                Cell neighbor = getNeighbor(d);
+                cellStateDeterminer = new CellStateDeterminer(neighbor);
+                if (!gameState.currentCellQueue.contains(cellStateDeterminer)) {
+                    gameState.currentCellQueue.add(cellStateDeterminer);
+
+                }
+            }
+        }
     }
 
     @Override
@@ -195,5 +216,35 @@ class Cell {
                 ", addedToNextStepQueue=" + addedToNextStepQueue +
                 ", addedToUpdateQueue=" + addedToUpdateQueue +
                 '}';
+    }
+
+    static class CellStateDeterminer implements Callable<Void> {
+
+        private final Cell cell;
+
+        public CellStateDeterminer(Cell cell) {
+            this.cell = cell;
+        }
+
+        @Override
+        public Void call() throws Exception {
+            cell.determineNextState();
+            return null;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            CellStateDeterminer that = (CellStateDeterminer) o;
+
+            return cell == that.cell;
+        }
+
+        @Override
+        public int hashCode() {
+            return cell.hashCode();
+        }
     }
 }

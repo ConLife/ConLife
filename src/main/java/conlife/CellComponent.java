@@ -2,6 +2,7 @@ package conlife;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CellComponent extends JComponent {
 
@@ -11,7 +12,7 @@ public class CellComponent extends JComponent {
     private static final Color DEAD_COLOR = Color.white;
 
     private final int cellX, cellY;
-    private boolean alive = false;
+    private AtomicBoolean alive = new AtomicBoolean(false);
 
     public CellComponent(int x, int y) {
         this.cellX = x;
@@ -24,7 +25,7 @@ public class CellComponent extends JComponent {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setPaint(alive ? ALIVE_COLOR : DEAD_COLOR);
+        g2.setPaint(alive.get() ? ALIVE_COLOR : DEAD_COLOR);
         g2.fillOval(0, 0, CELL_SIZE, CELL_SIZE);
     }
     @Override
@@ -32,17 +33,18 @@ public class CellComponent extends JComponent {
         return new Dimension(CELL_SIZE, CELL_SIZE);
     }
 
+    /**
+     * Sets the alive state of this cell and return whether the new state is different than the previous state.
+     *
+     * @param alive the new state
+     * @return true if the new state is different from the previous state.
+     */
     public boolean setAlive(boolean alive) {
-        boolean result = alive != this.alive;
-        if (result) {
-            SwingUtilities.invokeLater(this::repaint);
-        }
-        this.alive = alive;
-        return result;
+        return alive != this.alive.getAndSet(alive);
     }
 
     public boolean isAlive() {
-        return this.alive;
+        return this.alive.get();
     }
 
     public int getCellX() {

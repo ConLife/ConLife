@@ -3,16 +3,21 @@ package conlife;
 import java.awt.Dimension;
 import java.text.ParseException;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Controls all aspects of the mechanics of the game. Most of the operations in this class are not thread safe. However,
+ * game steps are performed in a thread safe manner and can be parallelized effectively. A ga
+ */
 public class GameState {
 
-    private static final Dimension DEFAULT_BOARD_SIZE = new Dimension(100, 100);
+    public static final Dimension DEFAULT_BOARD_SIZE = new Dimension(100, 100);
 
     public static final String DEFAULT_RULES_STRING = "B03/S23";
+
+    public static final int DEFAULT_THREAD_COUNT = 4;
 
     // synchronization of the rules is probably not a concern...
     private static final Object rulesLock = new Object();
@@ -37,16 +42,16 @@ public class GameState {
         return defaultRules;
     }
 
-    private int currentStep = 0;
+    private AtomicInteger currentStep = new AtomicInteger(0);
     private int maxStep = -1;
 
-    private final ExecutorService threadPool = Executors.newFixedThreadPool(4);
+    private ExecutorService threadPool;
 
-    private final Rules rules;
+    private Rules rules;
     private final int boardWidth, boardHeight;
     private Cell[][] board;
 
-    final Queue<Callable<Void>> currentCellQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Cell.CellStateDeterminer> currentCellQueue = new ConcurrentLinkedQueue<>();
     final Queue<Callable<Void>> cellUpdateQueue = new ConcurrentLinkedQueue<>();
     final Queue<Callable<Void>> nextStepCellQueue = new ConcurrentLinkedQueue<>();
 
@@ -57,13 +62,18 @@ public class GameState {
     }
 
     static GameState createNewGame(String[] initialCondition, char livingCellChar) {
-        return createNewGame(getDefaultRules(), initialCondition, livingCellChar);
+        return createNewGame(initialCondition, livingCellChar, DEFAULT_THREAD_COUNT);
     }
 
-    /**
-     * Probably going to only be for testing...
-     */
+    static GameState createNewGame(String[] initialCondition, char livingCellChar, int threadCount) {
+        return createNewGame(getDefaultRules(), initialCondition, livingCellChar, threadCount);
+    }
+
     static GameState createNewGame(Rules rules, String[] initialCondition, char livingCellChar) {
+        return createNewGame(rules, initialCondition, livingCellChar, DEFAULT_THREAD_COUNT);
+    }
+
+    static GameState createNewGame(Rules rules, String[] initialCondition, char livingCellChar, int threadCount) {
         int height = initialCondition.length;
         int width = -1;
         for (String line : initialCondition) {
@@ -73,20 +83,29 @@ public class GameState {
                 throw new IllegalArgumentException("Every line must be equal length");
             }
         }
-        GameState game = createNewGame(rules, new Dimension(width, height));
+        GameState game = createNewGame(rules, new Dimension(width, height), threadCount);
         game.setInitialGameState(initialCondition, livingCellChar);
         return game;
     }
 
     static GameState createNewGame(Dimension boardSize) {
-        return createNewGame(getDefaultRules(), boardSize);
+        return createNewGame(boardSize, DEFAULT_THREAD_COUNT);
+    }
+
+    static GameState createNewGame(Dimension boardSize, int threadCount) {
+        return createNewGame(getDefaultRules(), boardSize, threadCount);
     }
 
     static GameState createNewGame(Rules rules, Dimension boardSize) {
-        return new GameState(rules, (int) boardSize.getWidth(), (int) boardSize.getHeight());
+        return createNewGame(rules, boardSize, DEFAULT_THREAD_COUNT);
     }
 
-    private GameState(Rules rules, int boardWidth, int boardHeight) {
+    static GameState createNewGame(Rules rules, Dimension boardSize, int threadCount) {
+        return new GameState(rules, (int) boardSize.getWidth(), (int) boardSize.getHeight(), threadCount);
+    }
+
+    private GameState(Rules rules, int boardWidth, int boardHeight, int threadCount) {
+        threadPool = Executors.newFixedThreadPool(threadCount);
         this.rules = rules;
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
@@ -98,10 +117,7 @@ public class GameState {
                 board[y][x] = cell;
 
                 // TEMPORARY TODO REMOVE
-                currentCellQueue.add(() -> {
-                    cell.determineNextState();
-                    return null;
-                });
+                currentCellQueue.add(new Cell.CellStateDeterminer(cell));
             }
         }
 
@@ -148,10 +164,7 @@ public class GameState {
 
     void addCellToNextStepQueue(Cell cell) {
         nextStepCellQueue.add(() -> {
-            currentCellQueue.add(() -> {
-                cell.determineNextState();
-                return null;
-            });
+            currentCellQueue.add(new Cell.CellStateDeterminer(cell));
             return null;
         });
     }
@@ -211,11 +224,16 @@ public class GameState {
     }
 
     void _incrementGameStep() {
-        currentStep++;
+        currentStep.incrementAndGet();
     }
 
+    /**
+     * Gets the current game step. This method is thread safe.
+     *
+     * @return the current game step.
+     */
     public int getCurrentStep() {
-        return currentStep;
+        return currentStep.get();
     }
 
     public void setMaxStep(int maxStep) {
@@ -248,5 +266,15 @@ public class GameState {
             }
         }
         return builder.toString();
+    }
+
+    /**
+     * Changes the number of threads used to process the game steps. This method is DEFINITELY not thread safe and
+     * should only ever be called when a step is not being processed.
+     *
+     * @param threadPoolSize The new number of threads to use to process game steps.
+     */
+    public void setThreadPoolSize(int threadPoolSize) {
+        threadPool = Executors.newFixedThreadPool(threadPoolSize);
     }
 }

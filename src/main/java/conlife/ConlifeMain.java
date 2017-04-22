@@ -16,6 +16,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.text.ParseException;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 public class ConlifeMain extends JFrame {
@@ -35,16 +39,21 @@ public class ConlifeMain extends JFrame {
         SwingUtilities.invokeLater(() -> new ConlifeMain().setVisible(true));
     }
 
-    private final CellComponent[][] board = new CellComponent[100][100];
+    private DrawPanel gamePanel;
+    private JTextField stepField;
+    private final CellComponent[][] board = new CellComponent[(int) GameState.DEFAULT_BOARD_SIZE.getHeight()][(int) GameState.DEFAULT_BOARD_SIZE.getWidth()];
     private int boardLeftInset = 0, boardTopInset = 0;
     private int boardWidth = 0, boardHeight = 0;
     private MouseState drawing = MouseState.NOT_DRAWING;
     private GameState gameState = GameState.createNewGame();
     private Set<CellComponent> cellsThatChangedState = new HashSet<>();
 
+    private ExecutorService gameThread = Executors.newSingleThreadExecutor();
+    private ExecutorService workerThread = Executors.newSingleThreadExecutor();
+
     private ConlifeMain() {
         setTitle("Conway's Game of Life (with Concurrency!)");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLocationRelativeTo(this);
         try {
             getContentPane().add(initComponents());
@@ -60,7 +69,7 @@ public class ConlifeMain extends JFrame {
     private JPanel initComponents() throws ParseException {
         JPanel panel = new JPanel(new MigLayout("fill", "[grow]", "[shrink][grow][shrink]"));
 
-        JPanel settingPanel = new JPanel(new MigLayout("fill", "[shrink][grow][shrink][grow]", "[][]"));
+        JPanel settingPanel = new JPanel(new MigLayout("fill", "[shrink][grow][shrink][grow]", "[]"));
         settingPanel.setBorder(BorderFactory.createEtchedBorder());
         JLabel rulesLabel = new JLabel("Rules");
         MaskFormatter formatter = new MaskFormatter("B##/S##");
@@ -72,98 +81,86 @@ public class ConlifeMain extends JFrame {
 
             @Override
             public void focusLost(FocusEvent e) {
-                try {
-                    Rules rules = Rules.parseRules(rulesField.getText());
-                    GameState.updateDefaultRules(rules);
-                } catch (ParseException | Rules.RulesException ignore) {
-                    SwingUtilities.invokeLater(() -> {rulesField.setText(GameState.DEFAULT_RULES_STRING);});
-                }
+                final String text = rulesField.getText();
+                gameThread.submit(() -> {
+                    try {
+                        Rules rules = Rules.parseRules(text);
+                        GameState.updateDefaultRules(rules);
+                    } catch (ParseException | Rules.RulesException ignore) {
+                        SwingUtilities.invokeLater(() -> {rulesField.setText(GameState.DEFAULT_RULES_STRING);});
+                    }
+                });
             }
         });
         settingPanel.add(rulesLabel, "");
         settingPanel.add(rulesField, "growx");
 
-        JLabel maxStepsLabel = new JLabel("Max Steps");
-        final JTextField maxStepsField = new JTextField("-1");
-        rulesField.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) { }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                try {
-                    String text = maxStepsField.getText();
-                    Integer.parseInt(text);
-                } catch (NumberFormatException ignore) {
-                    SwingUtilities.invokeLater(() -> {rulesField.setText("-1");});
-                }
-            }
-        });
-        settingPanel.add(maxStepsLabel, "");
-        settingPanel.add(maxStepsField, "growx, wrap");
-
-        JLabel fpsLabel = new JLabel("FPS");
-        JTextField fpsField = new JTextField("0");
-        fpsField.setEnabled(false);
-        settingPanel.add(fpsLabel, "");
-        settingPanel.add(fpsField, "growx");
-
         JLabel stepLabel = new JLabel("Current Step");
-        JTextField stepField = new JTextField("0");
+        stepField = new JTextField("0");
         stepField.setEnabled(false);
         settingPanel.add(stepLabel, "");
         settingPanel.add(stepField, "growx");
 
-        DrawPanel gamePanel = new DrawPanel();
+        gamePanel = new DrawPanel();
         gamePanel.setBorder(BorderFactory.createEtchedBorder());
         MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                CellComponent cell = getCell(e.getPoint());
+                final CellComponent cell = getCell(e.getPoint());
                 if (cell == null) {
                     return;
                 }
-                if (cell.isAlive()) {
-                    drawing = MouseState.DRAWING_OFF;
-                    if (cell.setAlive(false)) {
-                        cellsThatChangedState.add(cell);
+                workerThread.submit(() -> {
+                    if (cell.isAlive()) {
+                        drawing = MouseState.DRAWING_OFF;
+                        if (cell.setAlive(false)) {
+                            cellsThatChangedState.add(cell);
+                            SwingUtilities.invokeLater(cell::repaint);
+                        }
+                    } else {
+                        drawing = MouseState.DRAWING_ON;
+                        if (cell.setAlive(true)) {
+                            cellsThatChangedState.add(cell);
+                            SwingUtilities.invokeLater(cell::repaint);
+                        }
                     }
-                } else {
-                    drawing = MouseState.DRAWING_ON;
-                    if (cell.setAlive(true)) {
-                        cellsThatChangedState.add(cell);
-                    }
-                }
+                });
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                drawing = MouseState.NOT_DRAWING;
+                workerThread.submit(() -> { drawing = MouseState.NOT_DRAWING; });
+
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                drawing = MouseState.NOT_DRAWING;
+                workerThread.submit(() -> { drawing = MouseState.NOT_DRAWING; });
             }
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                if (drawing == MouseState.NOT_DRAWING) {
-                    return;
-                }
-                CellComponent cell = getCell(e.getPoint());
+                final CellComponent cell = getCell(e.getPoint());
                 if (cell == null) {
                     return;
                 }
-                if (drawing == MouseState.DRAWING_ON) {
-                    if (cell.setAlive(true)) {
-                        cellsThatChangedState.add(cell);
+                workerThread.submit(() -> {
+                    if (drawing == MouseState.NOT_DRAWING) {
+                        return;
                     }
-                } else {
-                    if (cell.setAlive(false)) {
-                        cellsThatChangedState.add(cell);
+                    if (drawing == MouseState.DRAWING_ON) {
+                        if (cell.setAlive(true)) {
+                            cellsThatChangedState.add(cell);
+                            SwingUtilities.invokeLater(cell::repaint);
+                        }
+                    } else {
+                        if (cell.setAlive(false)) {
+                            cellsThatChangedState.add(cell);
+                            SwingUtilities.invokeLater(cell::repaint);
+                        }
                     }
-                }
+                });
+
             }
         };
         gamePanel.addMouseMotionListener(mouseAdapter);
@@ -178,42 +175,14 @@ public class ConlifeMain extends JFrame {
         boardWidth = 100 * CellComponent.CELL_SIZE;
         boardHeight = 100 * CellComponent.CELL_SIZE;
 
-        for (int i = 0; i < 100; i++) {
-            for (int j = 0; j < 100; j++) {
+        for (int i = 0; i < (int) GameState.DEFAULT_BOARD_SIZE.getWidth(); i++) {
+            for (int j = 0; j < (int) GameState.DEFAULT_BOARD_SIZE.getHeight(); j++) {
                 board[j][i] = new CellComponent(i, j);
                 gamePanel.add(board[j][i]);
                 Dimension size = board[j][i].getPreferredSize();
                 board[j][i].setBounds(i * CellComponent.CELL_SIZE + insets.left, j * CellComponent.CELL_SIZE + insets.top, size.width, size.height);
             }
         }
-
-
-
-//        Dimension size = cellComponent.getPreferredSize();
-//        cellComponent.setBounds(25 + insets.left, 5 + insets.top,
-//                size.width, size.height);
-
-//        GLProfile glprofile = GLProfile.getDefault();
-//        GLCapabilities glcapabilities = new GLCapabilities(glprofile);
-//        GLJPanel gamePanel = new GLJPanel(glcapabilities);
-//
-//        gamePanel.addGLEventListener( new GLEventListener() {
-//            @Override
-//            public void reshape(GLAutoDrawable glAutoDrawable, int x, int y, int width, int height ) {
-//                OneTriangle.setup( glAutoDrawable.getGL().getGL2(), width, height );
-//            }
-//
-//            @Override
-//            public void init( GLAutoDrawable glAutoDrawable ) {}
-//
-//            @Override
-//            public void dispose( GLAutoDrawable glAutoDrawable ) {}
-//
-//            @Override
-//            public void display( GLAutoDrawable glAutoDrawable ) {
-//                OneTriangle.render( glAutoDrawable.getGL().getGL2(), glAutoDrawable.getSurfaceWidth(), glAutoDrawable.getSurfaceHeight() );
-//            }
-//        });
 
         JPanel buttonsPanel = new JPanel(new MigLayout("fill", "[grow][grow][grow][grow]", ""));
         buttonsPanel.setBorder(BorderFactory.createEtchedBorder());
@@ -227,20 +196,17 @@ public class ConlifeMain extends JFrame {
         stopButton.setEnabled(false);
         buttonsPanel.add(stopButton, "center, growx");
         JButton stepButton = new JButton("Step");
-        stepButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                step();
-            }
-        });
+        stepButton.addActionListener(e -> workerThread.submit(this::step));
         buttonsPanel.add(stepButton, "center, growx");
 
         panel.add(settingPanel, "growx, wrap");
         panel.add(gamePanel, "growx, growy, wrap");
         panel.add(buttonsPanel, "growx");
 
-        insets = gamePanel.getInsets();
-        this.setPreferredSize(new Dimension(CellComponent.CELL_SIZE * 100 + 50, CellComponent.CELL_SIZE * 100 + 200));
+        // This magic number represent the additional space used by the UI surrounding the game board and exist due to
+        // the developers lack of knowledge of how to programatically determine that space.
+        this.setPreferredSize(new Dimension(CellComponent.CELL_SIZE * (int) GameState.DEFAULT_BOARD_SIZE.getWidth() + 35,
+                CellComponent.CELL_SIZE * (int) GameState.DEFAULT_BOARD_SIZE.getHeight() + 148));
         return panel;
     }
 
@@ -254,15 +220,43 @@ public class ConlifeMain extends JFrame {
     }
 
     private void step() {
+        final CellUpdate[] cellUpdatesFromUI = new CellUpdate[cellsThatChangedState.size()];
+        int i = 0;
         for (CellComponent cellComponent : cellsThatChangedState) {
-            Cell cell = gameState.getCell(cellComponent.getCellX(), cellComponent.getCellY());
-            cell.setCurrentlyAlive(cellComponent.isAlive());
+            cellUpdatesFromUI[i] = new CellUpdate(cellComponent.getCellX(), cellComponent.getCellY(), cellComponent.isAlive());
+            i++;
         }
-        gameState.processGameStep();
-        Collection<Cell> cellUpdates = gameState.getCellsThatChangedState();
-        for (Cell cell : cellUpdates) {
-            CellComponent cellComponent = board[cell.getY()][cell.getX()];
-            cellComponent.setAlive(cell.isAlive());
+
+        final Future<CellUpdate[]> futureCellUpdates = gameThread.submit(() -> {
+            for (CellUpdate cellUpdate : cellUpdatesFromUI) {
+                Cell cell = gameState.getCell(cellUpdate.getX(), cellUpdate.getY());
+                cell.setCurrentlyAlive(cellUpdate.isAlive());
+            }
+            gameState.processGameStep();
+            Collection<Cell> cellUpdates = gameState.getCellsThatChangedState();
+            CellUpdate[] cellUpdatesFromGame = new CellUpdate[cellUpdates.size()];
+            int j = 0;
+            for (Cell cell : cellUpdates) {
+                cellUpdatesFromGame[j] = new CellUpdate(cell.getX(), cell.getY(), cell.isAlive());
+                j++;
+            }
+            return cellUpdatesFromGame;
+        });
+
+
+        try {
+            CellUpdate[] cellUpdatesFromGame = futureCellUpdates.get();
+            for (CellUpdate cell : cellUpdatesFromGame) {
+                CellComponent cellComponent = board[cell.getY()][cell.getX()];
+                cellComponent.setAlive(cell.isAlive());
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
         }
+
+        SwingUtilities.invokeLater(() -> {
+            gamePanel.repaint();
+            stepField.setText(Integer.toString(gameState.getCurrentStep()));
+        });
     }
 }
