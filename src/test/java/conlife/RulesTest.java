@@ -7,7 +7,7 @@ import static org.junit.Assert.*;
 public class RulesTest {
     @Test
     public void parseRules() throws Exception {
-        Rules rules = Rules.parseRules("B03/S23");
+        Rules rules = Rules.parseRules("B3/S23");
         assertTrue(rules.isBirth(3));
         assertFalse(rules.isBirth(0));
         assertFalse(rules.isBirth(1));

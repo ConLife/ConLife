@@ -64,8 +64,7 @@ class Cell {
     Rules.Rule _determineNextState(boolean alive, int livingNeighbors) {
         Rules.Rule rule = gameState.getRules().getRule(alive, livingNeighbors);
         switch (rule) {
-            case UNDER_POPULATION: // Rule 1
-            case OVER_POPULATION: // Rule 3
+            case DEATH: // Rule 1 & 3
                 // The cell is going to die and only should be added to next step queue if it has living neighbors
                 prepareForNextState(false, livingNeighbors != 0);
                 break;

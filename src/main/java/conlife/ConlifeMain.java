@@ -44,7 +44,7 @@ public class ConlifeMain extends JFrame {
     private JTextField stepField;
     private JButton playButton;
     private JButton stepButton;
-    private JFormattedTextField rulesField;
+    private JTextField rulesField;
     private JMenuItem clearBoardItem;
     private JMenuItem randomBoardItem;
     private final CellComponent[][] board = new CellComponent[(int) GameState.DEFAULT_BOARD_SIZE.getHeight()][(int) GameState.DEFAULT_BOARD_SIZE.getWidth()];
@@ -124,8 +124,7 @@ public class ConlifeMain extends JFrame {
         settingPanel.setBorder(BorderFactory.createEtchedBorder());
         JLabel rulesLabel = new JLabel("Rules");
         MaskFormatter formatter = new MaskFormatter("B##/S##");
-        rulesField = new JFormattedTextField(formatter);
-        rulesField.setText(GameState.DEFAULT_RULES_STRING);
+        rulesField = new JTextField(GameState.DEFAULT_RULES_STRING);
         rulesField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) { }
@@ -137,7 +136,6 @@ public class ConlifeMain extends JFrame {
                     try {
                         Rules rules = Rules.parseRules(text);
                         gameState.setRules(rules);
-                        //GameState.updateDefaultRules(rules);
                     } catch (ParseException | Rules.RulesException ignore) {
                         SwingUtilities.invokeLater(() -> {rulesField.setText(GameState.DEFAULT_RULES_STRING);});
                     }

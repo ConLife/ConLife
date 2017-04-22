@@ -15,7 +15,7 @@ public class GameState {
 
     public static final Dimension DEFAULT_BOARD_SIZE = new Dimension(100, 100);
 
-    public static final String DEFAULT_RULES_STRING = "B03/S23";
+    public static final String DEFAULT_RULES_STRING = "B3/S23";
 
     public static final int DEFAULT_THREAD_COUNT = 4;
 
