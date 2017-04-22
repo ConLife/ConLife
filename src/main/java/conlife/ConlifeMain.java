@@ -12,12 +12,12 @@ import javax.swing.text.MaskFormatter;
 import java.awt.*;
 import java.awt.event.*;
 import java.text.ParseException;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 public class ConlifeMain extends JFrame {
@@ -45,6 +45,8 @@ public class ConlifeMain extends JFrame {
     private JButton playButton;
     private JButton stepButton;
     private JFormattedTextField rulesField;
+    private JMenuItem clearBoardItem;
+    private JMenuItem randomBoardItem;
     private final CellComponent[][] board = new CellComponent[(int) GameState.DEFAULT_BOARD_SIZE.getHeight()][(int) GameState.DEFAULT_BOARD_SIZE.getWidth()];
     private int boardLeftInset = 0, boardTopInset = 0;
     private int boardWidth = 0, boardHeight = 0;
@@ -56,6 +58,8 @@ public class ConlifeMain extends JFrame {
     private ExecutorService gameThread = Executors.newSingleThreadExecutor();
     private ExecutorService workerThread = Executors.newSingleThreadExecutor();
 
+    private final Random random = new Random();
+
     private ConlifeMain() {
         setTitle("Conway's Game of Life (with Concurrency!)");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -66,9 +70,51 @@ public class ConlifeMain extends JFrame {
             System.err.println("Could not create the GUI");
             System.exit(1);
         }
+        initMenuBar();
         //setPreferredSize(new Dimension(900, 700));
         pack();
         setLocationRelativeTo(null);
+    }
+
+    private void initMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+
+        JMenu fileMenu = new JMenu("File");
+        JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.addActionListener(e -> System.exit(0));
+        fileMenu.add(exitItem);
+        menuBar.add(fileMenu);
+
+        JMenu editMenu = new JMenu("Edit");
+        clearBoardItem = new JMenuItem("Clear Board");
+        clearBoardItem.addActionListener(e -> {
+            for (int i = 0; i < (int) GameState.DEFAULT_BOARD_SIZE.getWidth(); i++) {
+                for (int j = 0; j < (int) GameState.DEFAULT_BOARD_SIZE.getHeight(); j++) {
+                    CellComponent cell = board[j][i];
+                    if (cell.setAlive(false)) {
+                        cellsThatChangedState.add(cell);
+                    }
+                }
+            }
+            gamePanel.repaint();
+        });
+        editMenu.add(clearBoardItem);
+        randomBoardItem = new JMenuItem("Randomize");
+        randomBoardItem.addActionListener(e -> {
+            for (int i = 0; i < (int) GameState.DEFAULT_BOARD_SIZE.getWidth(); i++) {
+                for (int j = 0; j < (int) GameState.DEFAULT_BOARD_SIZE.getHeight(); j++) {
+                    CellComponent cell = board[j][i];
+                    if (cell.setAlive(random.nextBoolean())) {
+                        cellsThatChangedState.add(cell);
+                    }
+                }
+            }
+            gamePanel.repaint();
+        });
+        editMenu.add(randomBoardItem);
+        menuBar.add(editMenu);
+
+        this.setJMenuBar(menuBar);
     }
 
     private JPanel initComponents() throws ParseException {
@@ -241,7 +287,7 @@ public class ConlifeMain extends JFrame {
         // This magic number represent the additional space used by the UI surrounding the game board and exist due to
         // the developers lack of knowledge of how to programatically determine that space.
         this.setPreferredSize(new Dimension(CellComponent.CELL_SIZE * (int) GameState.DEFAULT_BOARD_SIZE.getWidth() + 35,
-                CellComponent.CELL_SIZE * (int) GameState.DEFAULT_BOARD_SIZE.getHeight() + 148));
+                CellComponent.CELL_SIZE * (int) GameState.DEFAULT_BOARD_SIZE.getHeight() + 171)); //148
         return panel;
     }
 
@@ -260,10 +306,14 @@ public class ConlifeMain extends JFrame {
             playButton.setText("Pause");
             stepButton.setEnabled(false);
             rulesField.setEnabled(false);
+            clearBoardItem.setEnabled(false);
+            randomBoardItem.setEnabled(false);
         } else {
             playButton.setText("Play");
             stepButton.setEnabled(true);
             rulesField.setEnabled(true);
+            clearBoardItem.setEnabled(true);
+            randomBoardItem.setEnabled(false);
         }
         workerThread.submit(gameLoop);
     }
