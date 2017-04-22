@@ -140,6 +140,10 @@ public class GameState {
         }
     }
 
+    public void setRules(Rules rules) {
+        this.rules = rules;
+    }
+
     public Rules getRules() {
         return rules;
     }

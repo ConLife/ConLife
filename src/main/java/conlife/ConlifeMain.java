@@ -1,16 +1,13 @@
 package conlife;
 
-import com.jogamp.opengl.GLAutoDrawable;
-import com.jogamp.opengl.GLCapabilities;
-import com.jogamp.opengl.GLEventListener;
-import com.jogamp.opengl.GLProfile;
-import com.jogamp.opengl.awt.GLJPanel;
 import net.miginfocom.swing.MigLayout;
 
 import java.util.Collection;
 import java.util.HashSet;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.MaskFormatter;
 import java.awt.*;
 import java.awt.event.*;
@@ -20,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 public class ConlifeMain extends JFrame {
@@ -35,12 +33,18 @@ public class ConlifeMain extends JFrame {
      *
      * @param args no required or optional args.
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        // This is required to fix a Swing related bug in the JDK that causes an exception in our program on startup.
+        System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+
         SwingUtilities.invokeLater(() -> new ConlifeMain().setVisible(true));
     }
 
     private DrawPanel gamePanel;
     private JTextField stepField;
+    private JButton playButton;
+    private JButton stepButton;
+    private JFormattedTextField rulesField;
     private final CellComponent[][] board = new CellComponent[(int) GameState.DEFAULT_BOARD_SIZE.getHeight()][(int) GameState.DEFAULT_BOARD_SIZE.getWidth()];
     private int boardLeftInset = 0, boardTopInset = 0;
     private int boardWidth = 0, boardHeight = 0;
@@ -48,6 +52,7 @@ public class ConlifeMain extends JFrame {
     private GameState gameState = GameState.createNewGame();
     private Set<CellComponent> cellsThatChangedState = new HashSet<>();
 
+    private GameLoop gameLoop = new GameLoop(this);
     private ExecutorService gameThread = Executors.newSingleThreadExecutor();
     private ExecutorService workerThread = Executors.newSingleThreadExecutor();
 
@@ -73,7 +78,7 @@ public class ConlifeMain extends JFrame {
         settingPanel.setBorder(BorderFactory.createEtchedBorder());
         JLabel rulesLabel = new JLabel("Rules");
         MaskFormatter formatter = new MaskFormatter("B##/S##");
-        final JFormattedTextField rulesField = new JFormattedTextField(formatter);
+        rulesField = new JFormattedTextField(formatter);
         rulesField.setText(GameState.DEFAULT_RULES_STRING);
         rulesField.addFocusListener(new FocusListener() {
             @Override
@@ -85,7 +90,8 @@ public class ConlifeMain extends JFrame {
                 gameThread.submit(() -> {
                     try {
                         Rules rules = Rules.parseRules(text);
-                        GameState.updateDefaultRules(rules);
+                        gameState.setRules(rules);
+                        //GameState.updateDefaultRules(rules);
                     } catch (ParseException | Rules.RulesException ignore) {
                         SwingUtilities.invokeLater(() -> {rulesField.setText(GameState.DEFAULT_RULES_STRING);});
                     }
@@ -97,7 +103,7 @@ public class ConlifeMain extends JFrame {
 
         JLabel stepLabel = new JLabel("Current Step");
         stepField = new JTextField("0");
-        stepField.setEnabled(false);
+        stepField.setEditable(false);
         settingPanel.add(stepLabel, "");
         settingPanel.add(stepField, "growx");
 
@@ -106,6 +112,9 @@ public class ConlifeMain extends JFrame {
         MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                if (gameLoop.running.get()) {
+                    return;
+                }
                 final CellComponent cell = getCell(e.getPoint());
                 if (cell == null) {
                     return;
@@ -129,17 +138,25 @@ public class ConlifeMain extends JFrame {
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                if (gameLoop.running.get()) {
+                    return;
+                }
                 workerThread.submit(() -> { drawing = MouseState.NOT_DRAWING; });
-
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
+                if (gameLoop.running.get()) {
+                    return;
+                }
                 workerThread.submit(() -> { drawing = MouseState.NOT_DRAWING; });
             }
 
             @Override
             public void mouseDragged(MouseEvent e) {
+                if (gameLoop.running.get()) {
+                    return;
+                }
                 final CellComponent cell = getCell(e.getPoint());
                 if (cell == null) {
                     return;
@@ -184,19 +201,37 @@ public class ConlifeMain extends JFrame {
             }
         }
 
-        JPanel buttonsPanel = new JPanel(new MigLayout("fill", "[grow][grow][grow][grow]", ""));
+        JPanel buttonsPanel = new JPanel(new MigLayout("fill", "[grow][][grow][grow]", ""));
         buttonsPanel.setBorder(BorderFactory.createEtchedBorder());
 
-        JButton startButton = new JButton("Start");
-        buttonsPanel.add(startButton, "center, growx");
-        JButton pauseButton = new JButton("Pause");
-        pauseButton.setEnabled(false);
-        buttonsPanel.add(pauseButton, "center, growx");
-        JButton stopButton = new JButton("Stop");
-        stopButton.setEnabled(false);
-        buttonsPanel.add(stopButton, "center, growx");
-        JButton stepButton = new JButton("Step");
-        stepButton.addActionListener(e -> workerThread.submit(this::step));
+        playButton = new JButton("Play");
+        playButton.addActionListener(e -> togglePlay());
+        buttonsPanel.add(playButton, "center, growx");
+        JLabel speedLabel = new JLabel("Speed");
+        buttonsPanel.add(speedLabel);
+        final JSlider speedSlider = new JSlider(SwingConstants.HORIZONTAL, 1000 / GameLoop.MAX_TIME_PER_GAME_LOOP,
+                1000 / GameLoop.MIN_TIME_PER_GAME_LOOP, 1000 / GameLoop.DEFAULT_TIME_PER_GAME_LOOP);
+        speedSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if (!speedSlider.getValueIsAdjusting()) {
+                    double lps = speedSlider.getValue();
+                    if (lps == 0) {
+                        lps = .5D;
+                    }
+                    int newSpeed = (int) (1000 / lps);
+                    gameLoop.timePerLoopMs.set(newSpeed);
+                }
+            }
+        });
+        buttonsPanel.add(speedSlider, "center, growx");
+        stepButton = new JButton("Step");
+        stepButton.addActionListener(e -> {
+            if (gameLoop.running.get()) {
+                return;
+            }
+            workerThread.submit(this::step);
+        });
         buttonsPanel.add(stepButton, "center, growx");
 
         panel.add(settingPanel, "growx, wrap");
@@ -219,7 +254,21 @@ public class ConlifeMain extends JFrame {
         return board[y][x];
     }
 
-    private void step() {
+    private void togglePlay() {
+        final boolean running = !gameLoop.running.getAndSet(!gameLoop.running.get());
+        if (running) {
+            playButton.setText("Pause");
+            stepButton.setEnabled(false);
+            rulesField.setEnabled(false);
+        } else {
+            playButton.setText("Play");
+            stepButton.setEnabled(true);
+            rulesField.setEnabled(true);
+        }
+        workerThread.submit(gameLoop);
+    }
+
+    void step() {
         final CellUpdate[] cellUpdatesFromUI = new CellUpdate[cellsThatChangedState.size()];
         int i = 0;
         for (CellComponent cellComponent : cellsThatChangedState) {
