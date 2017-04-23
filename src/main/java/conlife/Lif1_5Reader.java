@@ -8,6 +8,9 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Supports reading initial game conditions in the format of Life 1.05. Can read from a String or from a File.
+ */
 public class Lif1_5Reader {
 
     private final static Pattern DELIMITER_PATTERN = Pattern.compile("[\\r\\n;]+");
@@ -17,8 +20,6 @@ public class Lif1_5Reader {
     private final static Pattern DEFAULT_RULES_PATTERN = Pattern.compile("(?:#N)");
     private final static Pattern POSITION_PATTERN = Pattern.compile("#P (-?\\d+) (-?\\d+)");
     private final static Pattern BOARD_LINE_PATTERN = Pattern.compile("(\\*|\\.)+");
-
-    //private final String[] initialConditions;
 
     public static Lif1_5Reader fromFile(Dimension boardSize, File file) throws FileNotFoundException, ParseException, Rules.RulesException {
         Scanner scanner = new Scanner(file);
