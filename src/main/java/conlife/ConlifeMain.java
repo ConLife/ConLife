@@ -2,6 +2,8 @@ package conlife;
 
 import net.miginfocom.swing.MigLayout;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -47,6 +49,8 @@ public class ConlifeMain extends JFrame {
     private JTextField rulesField;
     private JMenuItem clearBoardItem;
     private JMenuItem randomBoardItem;
+    private JMenuItem loadItem;
+    private JFileChooser fileChooser = new JFileChooser(".");
     private final CellComponent[][] board = new CellComponent[(int) GameState.DEFAULT_BOARD_SIZE.getHeight()][(int) GameState.DEFAULT_BOARD_SIZE.getWidth()];
     private int boardLeftInset = 0, boardTopInset = 0;
     private int boardWidth = 0, boardHeight = 0;
@@ -71,7 +75,6 @@ public class ConlifeMain extends JFrame {
             System.exit(1);
         }
         initMenuBar();
-        //setPreferredSize(new Dimension(900, 700));
         pack();
         setLocationRelativeTo(null);
     }
@@ -80,6 +83,31 @@ public class ConlifeMain extends JFrame {
         JMenuBar menuBar = new JMenuBar();
 
         JMenu fileMenu = new JMenu("File");
+        loadItem = new JMenuItem("Load");
+        loadItem.addActionListener(e -> {
+            int result = fileChooser.showOpenDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                Lif1_5Reader reader;
+                try {
+                    reader = Lif1_5Reader.fromFile(new Dimension(gameState.getBoardWidth(), gameState.getBoardHeight()), file);
+                } catch (Exception exp) {
+                    JOptionPane.showMessageDialog(this, exp, "Error loading file", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                boolean[][] loadedBoard = reader.getBoard();
+                for (int i = 0; i < (int) GameState.DEFAULT_BOARD_SIZE.getWidth(); i++) {
+                    for (int j = 0; j < (int) GameState.DEFAULT_BOARD_SIZE.getHeight(); j++) {
+                        CellComponent cell = board[j][i];
+                        if (cell.setAlive(loadedBoard[j][i])) {
+                            cellsThatChangedState.add(cell);
+                        }
+                    }
+                }
+                gamePanel.repaint();
+            }
+        });
+        fileMenu.add(loadItem);
         JMenuItem exitItem = new JMenuItem("Exit");
         exitItem.addActionListener(e -> System.exit(0));
         fileMenu.add(exitItem);
@@ -306,12 +334,14 @@ public class ConlifeMain extends JFrame {
             rulesField.setEnabled(false);
             clearBoardItem.setEnabled(false);
             randomBoardItem.setEnabled(false);
+            loadItem.setEnabled(false);
         } else {
             playButton.setText("Play");
             stepButton.setEnabled(true);
             rulesField.setEnabled(true);
             clearBoardItem.setEnabled(true);
             randomBoardItem.setEnabled(false);
+            loadItem.setEnabled(true);
         }
         workerThread.submit(gameLoop);
     }
