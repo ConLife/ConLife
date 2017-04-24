@@ -1,4 +1,6 @@
-package conlife;
+package conlife.utils;
+
+import conlife.Rules;
 
 import java.awt.*;
 import java.io.File;

@@ -1,6 +1,7 @@
 package conlife.swing;
 
 import conlife.*;
+import conlife.utils.Lif1_5Reader;
 import net.miginfocom.swing.MigLayout;
 
 import java.io.File;
