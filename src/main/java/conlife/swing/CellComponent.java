@@ -1,4 +1,4 @@
-package conlife;
+package conlife.swing;
 
 import javax.swing.*;
 import java.awt.*;

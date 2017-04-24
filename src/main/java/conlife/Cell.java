@@ -3,7 +3,7 @@ package conlife;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class Cell {
+public class Cell {
 
     private final int x, y;
     private final GameState gameState;
@@ -186,7 +186,7 @@ class Cell {
      *
      * @param alive whether the cell should be alive currently.
      */
-    void setCurrentlyAlive(boolean alive) {
+    public void setCurrentlyAlive(boolean alive) {
         boolean previous = this.alive.getAndSet(alive);
         if (previous != alive) {
             CellStateDeterminer cellStateDeterminer = new CellStateDeterminer(this);

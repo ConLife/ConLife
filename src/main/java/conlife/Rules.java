@@ -2,13 +2,13 @@ package conlife;
 
 import java.text.ParseException;
 
-class Rules {
+public class Rules {
 
     enum Rule {
         BIRTH, SURVIVE, DEATH, DEAD_NO_BIRTH;
     }
 
-    static Rules parseRules(String rulesString) throws ParseException, RulesException {
+    public static Rules parseRules(String rulesString) throws ParseException, RulesException {
         String[] rules = rulesString.split("/");
         if (!rules[0].startsWith("B")) {
             throw new ParseException("Invalid rules", -1);
@@ -81,7 +81,7 @@ class Rules {
         return isBitEnabled(survive, numNeighbors);
     }
 
-    static class RulesException extends Exception {
+    public static class RulesException extends Exception {
         RulesException() {
             super();
         }

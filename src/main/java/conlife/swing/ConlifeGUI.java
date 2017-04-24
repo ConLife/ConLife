@@ -1,9 +1,9 @@
-package conlife;
+package conlife.swing;
 
+import conlife.*;
 import net.miginfocom.swing.MigLayout;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
-public class ConlifeMain extends JFrame {
+public class ConlifeGUI extends JFrame {
 
     private static enum MouseState {
         DRAWING_ON, DRAWING_OFF, NOT_DRAWING
@@ -39,7 +39,7 @@ public class ConlifeMain extends JFrame {
         // This is required to fix a Swing related bug in the JDK that causes an exception in our program on startup.
         System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 
-        SwingUtilities.invokeLater(() -> new ConlifeMain().setVisible(true));
+        SwingUtilities.invokeLater(() -> new ConlifeGUI().setVisible(true));
     }
 
     private DrawPanel gamePanel;
@@ -64,7 +64,7 @@ public class ConlifeMain extends JFrame {
 
     private final Random random = new Random();
 
-    private ConlifeMain() {
+    private ConlifeGUI() {
         setTitle("Conway's Game of Life (with Concurrency!)");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLocationRelativeTo(this);

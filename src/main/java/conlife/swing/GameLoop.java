@@ -1,4 +1,4 @@
-package conlife;
+package conlife.swing;
 
 import javax.swing.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -10,13 +10,13 @@ class GameLoop implements Runnable {
     public static final int MIN_TIME_PER_GAME_LOOP = 200;
     public static final int DEFAULT_TIME_PER_GAME_LOOP = 1000;
 
-    private final ConlifeMain main;
+    private final ConlifeGUI main;
     final AtomicBoolean running = new AtomicBoolean(false);
 
     final AtomicInteger timePerLoopMs = new AtomicInteger(1000); // default is 1 sec
     private long previousTime = 0;
 
-    GameLoop(ConlifeMain main) {
+    GameLoop(ConlifeGUI main) {
         this.main = main;
     }
 

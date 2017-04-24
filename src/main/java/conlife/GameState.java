@@ -57,23 +57,23 @@ public class GameState {
 
     final Queue<Cell> cellsThatChangedState = new ConcurrentLinkedQueue<>();
 
-    static GameState createNewGame() {
+    public static GameState createNewGame() {
         return createNewGame(DEFAULT_BOARD_SIZE);
     }
 
-    static GameState createNewGame(String[] initialCondition, char livingCellChar) {
+    public static GameState createNewGame(String[] initialCondition, char livingCellChar) {
         return createNewGame(initialCondition, livingCellChar, DEFAULT_THREAD_COUNT);
     }
 
-    static GameState createNewGame(String[] initialCondition, char livingCellChar, int threadCount) {
+    public static GameState createNewGame(String[] initialCondition, char livingCellChar, int threadCount) {
         return createNewGame(getDefaultRules(), initialCondition, livingCellChar, threadCount);
     }
 
-    static GameState createNewGame(Rules rules, String[] initialCondition, char livingCellChar) {
+    public static GameState createNewGame(Rules rules, String[] initialCondition, char livingCellChar) {
         return createNewGame(rules, initialCondition, livingCellChar, DEFAULT_THREAD_COUNT);
     }
 
-    static GameState createNewGame(Rules rules, String[] initialCondition, char livingCellChar, int threadCount) {
+    public static GameState createNewGame(Rules rules, String[] initialCondition, char livingCellChar, int threadCount) {
         int height = initialCondition.length;
         int width = -1;
         for (String line : initialCondition) {
@@ -88,19 +88,19 @@ public class GameState {
         return game;
     }
 
-    static GameState createNewGame(Dimension boardSize) {
+    public static GameState createNewGame(Dimension boardSize) {
         return createNewGame(boardSize, DEFAULT_THREAD_COUNT);
     }
 
-    static GameState createNewGame(Dimension boardSize, int threadCount) {
+    public static GameState createNewGame(Dimension boardSize, int threadCount) {
         return createNewGame(getDefaultRules(), boardSize, threadCount);
     }
 
-    static GameState createNewGame(Rules rules, Dimension boardSize) {
+    public static GameState createNewGame(Rules rules, Dimension boardSize) {
         return createNewGame(rules, boardSize, DEFAULT_THREAD_COUNT);
     }
 
-    static GameState createNewGame(Rules rules, Dimension boardSize, int threadCount) {
+    public static GameState createNewGame(Rules rules, Dimension boardSize, int threadCount) {
         return new GameState(rules, (int) boardSize.getWidth(), (int) boardSize.getHeight(), threadCount);
     }
 

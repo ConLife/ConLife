@@ -77,7 +77,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>conlife.ConlifeMain</mainClass>
+                            <mainClass>conlife.swing.ConlifeGUI</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
