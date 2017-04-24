@@ -43,7 +43,6 @@ public class GameState {
     }
 
     private AtomicInteger currentStep = new AtomicInteger(0);
-    private int maxStep = -1;
 
     private ExecutorService threadPool;
 
@@ -240,23 +239,8 @@ public class GameState {
         return currentStep.get();
     }
 
-    public void setMaxStep(int maxStep) {
-        if (maxStep < 1) {
-            throw new IllegalArgumentException("Max step must be greater than 0");
-        }
-        this.maxStep = maxStep;
-    }
-
     public Collection<Cell> getCellsThatChangedState() {
         return cellsThatChangedState;
-    }
-
-    public int getMaxStep() {
-        return maxStep;
-    }
-
-    public boolean isGameOver() {
-        return false;
     }
 
     String createBoardString(char deadCell, char liveCell) {
