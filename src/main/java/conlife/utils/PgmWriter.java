@@ -48,6 +48,7 @@ public class PgmWriter {
 
     public void createOutputForCurrentGameStep() {
         writeOutputToFile(createOutputString());
+        currentOutputNum++;
     }
 
     private String createOutputString() {
