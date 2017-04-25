@@ -31,23 +31,28 @@ public class ConlifeCLI {
         while (args.length > argsi) {
             if (args[argsi].charAt(0) == '-') {
                 char flag = args[argsi].charAt(1);
-                argsi++;
-                switch (flag) {
-                    case 'f'://input file name
-                        inFile = args[argsi];
-                        break;
-                    case 'b'://board size
-                        boardSize = Integer.parseInt(args[argsi]);
-                        break;
-                    case 's'://total steps
-                        totalSteps = Integer.parseInt(args[argsi]);
-                        break;
-                    case 't'://threads
-                        threadCount = Integer.parseInt(args[argsi]);
-                        break;
-                    case 'o'://ouputs wanted
-                        outputs = true;
-                        break;
+                argsi++; // We want to know what arg comes after the flag
+                try {
+                    switch (flag) {
+                        case 'f'://input file name
+                            inFile = args[argsi];
+                            break;
+                        case 'b'://board size
+                            boardSize = Integer.parseInt(args[argsi]);
+                            break;
+                        case 's'://total steps
+                            totalSteps = Integer.parseInt(args[argsi]);
+                            break;
+                        case 't'://threads
+                            threadCount = Integer.parseInt(args[argsi]);
+                            break;
+                        case 'o'://ouputs wanted
+                            outputs = true;
+                            break;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.printf("Was expecting number for flag -%c but received %s instead. Using default...\n",
+                            flag, args[argsi]);
                 }
             }
             argsi++;
