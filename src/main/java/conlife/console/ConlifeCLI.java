@@ -31,18 +31,19 @@ public class ConlifeCLI {
         while (args.length > argsi) {
             if (args[argsi].charAt(0) == '-') {
                 char flag = args[argsi].charAt(1);
+                argsi++;
                 switch (flag) {
                     case 'f'://input file name
-                        inFile = args[argsi].substring(2);
+                        inFile = args[argsi];
                         break;
                     case 'b'://board size
-                        boardSize = Integer.parseInt(args[argsi].substring(2));
+                        boardSize = Integer.parseInt(args[argsi]);
                         break;
                     case 's'://total steps
-                        totalSteps = Integer.parseInt(args[argsi].substring(2));
+                        totalSteps = Integer.parseInt(args[argsi]);
                         break;
                     case 't'://threads
-                        threadCount = Integer.parseInt(args[argsi].substring(2));
+                        threadCount = Integer.parseInt(args[argsi]);
                         break;
                     case 'o'://ouputs wanted
                         outputs = true;
