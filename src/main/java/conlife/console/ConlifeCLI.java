@@ -26,11 +26,11 @@ public class ConlifeCLI {
         if (args.length > 0) {
             inputFile = args[0];
             if (args.length > 1) {
-                boardSize = Integer.getInteger(args[1]);
+                boardSize = Integer.parseInt(args[1]);
                 if (args.length > 2) {
-                    totalSteps = Integer.getInteger(args[2]);
+                    totalSteps = Integer.parseInt(args[2]);
                     if (args.length > 3) {
-                        threadCount = Integer.getInteger(args[3]);
+                        threadCount = Integer.parseInt(args[3]);
                     }
                 }
             }
