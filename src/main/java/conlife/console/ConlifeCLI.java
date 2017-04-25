@@ -18,12 +18,12 @@ public class ConlifeCLI {
     private static Lif1_5Reader reader;
     private final static int BOARD_SIZE = 1000;
     private final static int TOTAL_STEPS = 500;
-    private final static String SAMPLE_FILE = "./samples/LINEPUF.LIF";
+    private final static String INPUT_FILE = "./samples/LINEPUF.LIF";
     private static int threadCount = 4;
     private final static double NANOSECONDS_TO_MILLISECONDS = 1.0 / 1000000.0;
 
     public static void main(String[] args) throws FileNotFoundException, ParseException, Rules.RulesException, IOException {
-        reader = Lif1_5Reader.fromFile(new Dimension(BOARD_SIZE, BOARD_SIZE), new File(SAMPLE_FILE));
+        reader = Lif1_5Reader.fromFile(new Dimension(BOARD_SIZE, BOARD_SIZE), new File(INPUT_FILE));
         String[] init = reader.createBoardString('.', '*').split("\n");
         gameState = GameState.createNewGame(init, '*', threadCount);
 
@@ -34,10 +34,11 @@ public class ConlifeCLI {
         long end = System.nanoTime();
         long time = end - start;
         double totalTime = time * NANOSECONDS_TO_MILLISECONDS;
-        String report = String.format("%s\t%d\t%d\t%d\t%f\n", SAMPLE_FILE, BOARD_SIZE, TOTAL_STEPS, threadCount, totalTime);
+        String report = String.format("%s\t%d\t%d\t%d\t%f\n", INPUT_FILE, BOARD_SIZE, TOTAL_STEPS, threadCount, totalTime);
         try {
             Files.write(Paths.get("timings.txt"), report.getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
+            System.out.println(e.toString());
         }
     }
 }
