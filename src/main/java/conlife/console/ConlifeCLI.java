@@ -47,6 +47,7 @@ public class ConlifeCLI {
                             threadCount = Integer.parseInt(args[argsi]);
                             break;
                         case 'o'://ouputs wanted
+                            argsi--; // This flag isn't interested in the next arg
                             outputs = true;
                             break;
                     }
