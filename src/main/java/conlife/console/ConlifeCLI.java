@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 public class ConlifeCLI {
-
+    
     private static GameState gameState;
     private static Lif1_5Reader reader;
     private static int boardSize = 1000;
@@ -21,7 +21,7 @@ public class ConlifeCLI {
     private static String inputFile = "./samples/LINEPUF.LIF";
     private static int threadCount = 4;
     private final static double NANOSECONDS_TO_MILLISECONDS = 1.0 / 1000000.0;
-
+    
     public static void main(String[] args) throws FileNotFoundException, ParseException, Rules.RulesException, IOException {
         if (args.length > 0) {
             inputFile = args[0];
@@ -38,7 +38,7 @@ public class ConlifeCLI {
         reader = Lif1_5Reader.fromFile(new Dimension(boardSize, boardSize), new File(inputFile));
         String[] init = reader.createBoardString('.', '*').split("\n");
         gameState = GameState.createNewGame(init, '*', threadCount);
-
+        
         long start = System.nanoTime();
         for (int step = 0; step < totalSteps; step++) {
             gameState.processGameStep();
@@ -54,5 +54,6 @@ public class ConlifeCLI {
         } catch (IOException e) {
             System.out.println(e.toString());
         }
+        System.exit(0);
     }
 }
