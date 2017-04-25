@@ -52,7 +52,7 @@ public class ConlifeCLI {
                             break;
                     }
                 } catch (NumberFormatException e) {
-                    System.out.printf("Was expecting number for flag -%c but received %s instead. Using default...\n",
+                    System.out.printf("Was expecting number for flag -%c but received \"%s\" instead. Using default...\n",
                             flag, args[argsi]);
                 }
             }
