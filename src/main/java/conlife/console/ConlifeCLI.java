@@ -47,8 +47,8 @@ public class ConlifeCLI {
                         outputs = true;
                         break;
                 }
-                argsi++;
             }
+            argsi++;
         }
     }
 
