@@ -30,7 +30,8 @@ public class ConlifeCLI {
         int argsi = 0;
         while (args.length > argsi) {
             if (args[argsi].charAt(0) == '-') {
-                switch (args[argsi].charAt(1)) {
+                char flag = args[argsi].charAt(1);
+                switch (flag) {
                     case 'f'://input file name
                         inFile = args[argsi].substring(2);
                         break;
