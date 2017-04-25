@@ -2,7 +2,7 @@ package conlife.utils;
 
 import conlife.Rules;
 
-import java.awt.*;
+import java.awt.Dimension;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.ParseException;
@@ -12,6 +12,8 @@ import java.util.regex.Pattern;
 
 /**
  * Supports reading initial game conditions in the format of Life 1.05. Can read from a String or from a File.
+ *
+ * @author Jeremy Wood
  */
 public class Lif1_5Reader {
 
@@ -23,11 +25,32 @@ public class Lif1_5Reader {
     private final static Pattern POSITION_PATTERN = Pattern.compile("#P (-?\\d+) (-?\\d+)");
     private final static Pattern BOARD_LINE_PATTERN = Pattern.compile("(\\*|\\.)+");
 
+    /**
+     * Creates a Life 1.5 reader that loads the initial conditions from the given file onto a board of the given
+     * dimensions.
+     *
+     * @param boardSize The size of the board to load onto.
+     * @param file The file to load from.
+     * @return A Life 1.5 reader loaded with initial conditions.
+     * @throws FileNotFoundException If the given file can't be found.
+     * @throws ParseException If the file format cannot be determined.
+     * @throws Rules.RulesException If the file contains invalid rules.
+     */
     public static Lif1_5Reader fromFile(Dimension boardSize, File file) throws FileNotFoundException, ParseException, Rules.RulesException {
         Scanner scanner = new Scanner(file);
         return new Lif1_5Reader(boardSize, scanner);
     }
 
+    /**
+     * Creates a Life 1.5 reader that parses the initial conditions from the given string onto a board of the given
+     * dimensions.
+     *
+     * @param boardSize The size of the board to load onto.
+     * @param string The string to load from.
+     * @return A Life 1.5 reader loaded with initial conditions.
+     * @throws ParseException If the string format cannot be determined.
+     * @throws Rules.RulesException If the string contains invalid rules.
+     */
     public static Lif1_5Reader fromString(Dimension boardSize, String string) throws ParseException, Rules.RulesException {
         Scanner scanner = new Scanner(string);
         return new Lif1_5Reader(boardSize, scanner);
@@ -91,10 +114,24 @@ public class Lif1_5Reader {
         }
     }
 
+    /**
+     * Returns a matrix representing the initial conditions that were loaded into this reader. True values represent
+     * living cells.
+     *
+     * @return the initial conditions matrix.
+     */
     public boolean[][] getBoard() {
         return board;
     }
 
+    /**
+     * Returns a string representation of the game board based on the initial conditions that were loaded into this
+     * reader.
+     *
+     * @param deadCell The character to represent dead cells with in the string.
+     * @param liveCell The character to represent living cells with in the string.
+     * @return A string representation of the game board.
+     */
     public String createBoardString(char deadCell, char liveCell) {
         StringBuilder builder = new StringBuilder();
         for (int y = 0; y < boardHeight; y++) {
@@ -108,6 +145,11 @@ public class Lif1_5Reader {
         return builder.toString();
     }
 
+    /**
+     * The game rules loaded into this reader.
+     *
+     * @return The loaded game rules.
+     */
     public Rules getRules() {
         return rules;
     }

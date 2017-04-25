@@ -2,12 +2,17 @@ package conlife.utils;
 
 import conlife.GameState;
 
-import java.awt.*;
+import java.awt.Dimension;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/**
+ * Used to create pgm files of a game's current state.
+ *
+ * @author Jeremy Wood
+ */
 public class PgmWriter {
 
     // Sample of how to use PgmWriter
@@ -44,8 +49,11 @@ public class PgmWriter {
         }
     }
 
-    int currentOutputNum = 0;
+    private int currentOutputNum = 0;
 
+    /**
+     * Creates a pgm file with in the output directory of this PgmWriter using an ordered numbering file name.
+     */
     public void createOutputForCurrentGameStep() {
         writeOutputToFile(createOutputString());
         currentOutputNum++;
