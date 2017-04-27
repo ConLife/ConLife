@@ -4,8 +4,15 @@ import java.awt.Dimension;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import static javafx.scene.input.KeyCode.T;
 
 /**
  * Controls all aspects of the mechanics of the game. Most of the operations in this class are not thread safe. However,
@@ -44,15 +51,16 @@ public class GameState {
 
     private AtomicInteger currentStep = new AtomicInteger(0);
 
-    private ExecutorService threadPool;
+    private GameThread[] threadPool;
+    private final CyclicBarrier barrier;
 
     private Rules rules;
     private final int boardWidth, boardHeight;
     private Cell[][] board;
 
-    final Queue<Cell.CellStateDeterminer> currentCellQueue = new ConcurrentLinkedQueue<>();
-    final Queue<Callable<Void>> cellUpdateQueue = new ConcurrentLinkedQueue<>();
-    final Queue<Callable<Void>> nextStepCellQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Cell> currentCellQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
+    final Queue<Cell> nextStepCellQueue = new ConcurrentLinkedQueue<>();
 
     final Queue<Cell> cellsThatChangedState = new ConcurrentLinkedQueue<>();
 
@@ -104,7 +112,6 @@ public class GameState {
     }
 
     private GameState(Rules rules, int boardWidth, int boardHeight, int threadCount) {
-        threadPool = Executors.newFixedThreadPool(threadCount);
         this.rules = rules;
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
@@ -116,7 +123,7 @@ public class GameState {
                 board[y][x] = cell;
 
                 // TEMPORARY TODO REMOVE
-                currentCellQueue.add(new Cell.CellStateDeterminer(cell));
+                currentCellQueue.add(cell);
             }
         }
 
@@ -126,6 +133,18 @@ public class GameState {
                     board[y][x].populateNeighbor(d, board[d.getNeighborY(y, boardHeight)][d.getNeighborX(x, boardWidth)]);
                 }
             }
+        }
+
+        ThreadGroup threadGroup = new ThreadGroup("game-logic-thread-group");
+        threadGroup.setDaemon(true);
+        barrier = new CyclicBarrier(threadCount + 1);
+        threadPool = new GameThread[threadCount];
+        // Determine max number of cells any thread should ever be dealing with
+        int perThreadWorkQueueSize = (int) Math.ceil((boardHeight * boardWidth) / (double) threadCount);
+        // Spin up the game threads
+        for (int i = 0; i < threadCount; i++) {
+            threadPool[i] = new GameThread(threadGroup, "game-logic-thread-" + i, perThreadWorkQueueSize, barrier);
+            threadPool[i].start();
         }
     }
 
@@ -166,19 +185,11 @@ public class GameState {
     }
 
     void addCellToNextStepQueue(Cell cell) {
-        nextStepCellQueue.add(() -> {
-            currentCellQueue.add(new Cell.CellStateDeterminer(cell));
-            return null;
-        });
+        nextStepCellQueue.add(cell);
     }
 
     void addCellToUpdateQueue(Cell cell) {
-        cellUpdateQueue.add(() -> {
-            if (cell.updateToNextState()) {
-                cellsThatChangedState.add(cell);
-            }
-            return null;
-        });
+        cellUpdateQueue.add(cell);
     }
 
     /**
@@ -199,35 +210,63 @@ public class GameState {
         _incrementGameStep();
     }
 
-    void _determineCellsNextState() {
-        try {
-            threadPool.invokeAll(currentCellQueue);
-            currentCellQueue.clear();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+    private void distributeWorkload(Queue<Cell> totalWorkload, Phase nextPhase) {
+        int[] cellCounts = getThreadWorkloadSizes(totalWorkload.size());
+        for (int i = 0; i < threadPool.length; i++) {
+            int cellCount = cellCounts[i];
+            for (int j = 0; j < cellCount; j++) {
+                threadPool[i].addCellToWorkQueue(totalWorkload.poll());
+            }
+            // This will start the thread's processing of cells
+            threadPool[i].phase = nextPhase;
+        }
+
+        if (!totalWorkload.isEmpty()) {
+            // This should never happen...
+            throw new IllegalStateException("The cell queue was not properly emptied");
         }
     }
 
+    void _determineCellsNextState() {
+        distributeWorkload(currentCellQueue, Phase.DETERMINE_NEXT_STATE);
+        wakeupWorkers();
+        waitForWorkersToFinish();
+    }
+
     void _updateCellStates() {
-        try {
-            threadPool.invokeAll(cellUpdateQueue);
-            cellUpdateQueue.clear();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        distributeWorkload(cellUpdateQueue, Phase.UPDATE);
+        wakeupWorkers();
+        waitForWorkersToFinish();
+        for (int i = 0; i < threadPool.length; i++) {
+            cellsThatChangedState.addAll(threadPool[i].getCellsThatChanged());
+            threadPool[i].clearCellsThatChanged();
         }
     }
 
     void _copyNextCellQueueToCurrent() {
-        try {
-            threadPool.invokeAll(nextStepCellQueue);
-            nextStepCellQueue.clear();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        // This is probably not worth parallelizing in the way of the other two steps since it would just be two adds
+        // instead of one.
+        //nextStepCellQueue.parallelStream().forEach(currentCellQueue::add);
+        currentCellQueue.addAll(nextStepCellQueue);
+        nextStepCellQueue.clear();
     }
 
     void _incrementGameStep() {
         currentStep.incrementAndGet();
+    }
+
+    private void wakeupWorkers() {
+        synchronized (barrier) {
+            barrier.notifyAll();
+        }
+    }
+
+    private void waitForWorkersToFinish() {
+        try {
+            barrier.await();
+        } catch (InterruptedException | BrokenBarrierException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -256,13 +295,22 @@ public class GameState {
         return builder.toString();
     }
 
+    private int[] getThreadWorkloadSizes(int numCells) {
+        int threadCount = threadPool.length;
+        int[] result = new int[threadCount];
+        int threadsWithExtra = numCells % threadCount;
+        int normalWorkLoad = numCells / threadCount;
+        int i;
+        for (i = 0; i < threadCount; i++) {
+            result[i] = normalWorkLoad + (i < threadsWithExtra ? 1 : 0);
+        }
+        return result;
+    }
+
     /**
-     * Changes the number of threads used to process the game steps. This method is DEFINITELY not thread safe and
-     * should only ever be called when a step is not being processed.
-     *
-     * @param threadPoolSize The new number of threads to use to process game steps.
+     * Used to direct game threads on what they should be doing.
      */
-    public void setThreadPoolSize(int threadPoolSize) {
-        threadPool = Executors.newFixedThreadPool(threadPoolSize);
+    enum Phase {
+        DETERMINE_NEXT_STATE, UPDATE, COPY, WAIT, EXIT;
     }
 }
