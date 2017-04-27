@@ -97,6 +97,13 @@ public class ConlifeCLI {
     
     public static void main(String[] args) throws FileNotFoundException, ParseException, Rules.RulesException, IOException {
         parseArgs(args);
+        System.out.print("Warming up the JVM");
+        for (int i = 0; i < 10; i++) {
+            init();
+            runGame();
+            System.out.print(".");
+        }
+        System.out.println("Performing timing");
         init();
         long start = System.nanoTime();
         runGame();
