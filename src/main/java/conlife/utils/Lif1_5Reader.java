@@ -73,7 +73,6 @@ public class Lif1_5Reader {
             String version = scanner.next(VERSION_PATTERN);
             Matcher matcher = VERSION_PATTERN.matcher(version);
             matcher.matches();
-            System.out.printf("Using Format: %s\n", matcher.group(1));
         } else {
             throw new ParseException("Unknown format", -1);
         }
