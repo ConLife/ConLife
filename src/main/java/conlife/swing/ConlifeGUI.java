@@ -4,6 +4,9 @@ import conlife.*;
 import conlife.utils.Lif1_5Reader;
 import net.miginfocom.swing.MigLayout;
 
+import java.awt.Dialog.ModalityType;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,8 +42,44 @@ public class ConlifeGUI extends JFrame {
     public static void main(String[] args) throws Exception {
         // This is required to fix a Swing related bug in the JDK that causes an exception in our program on startup.
         System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+        //This class simply extends a JDialog and contains an image and a jlabel (Please wait)
 
-        SwingUtilities.invokeLater(() -> new ConlifeGUI().setVisible(true));
+        final ConlifeGUI gui = showLoadingDialog().get();
+        SwingUtilities.invokeLater(() -> {
+            gui.setVisible(true);
+        });
+    }
+
+    private static SwingWorker<ConlifeGUI, Void> showLoadingDialog() {
+        SwingWorker<ConlifeGUI, Void> gameCreator = new SwingWorker<ConlifeGUI, Void>() {
+            @Override
+            protected ConlifeGUI doInBackground() throws Exception {
+                GameState gameState = GameState.createNewGame();
+                return new ConlifeGUI(gameState);
+            }
+        };
+
+        final JDialog dialog = new JDialog((Frame) null, "Loading Game");
+
+        gameCreator.addPropertyChangeListener(evt -> {
+            if (evt.getPropertyName().equals("state")) {
+                if (evt.getNewValue() == SwingWorker.StateValue.DONE) {
+                    dialog.dispose();
+                }
+            }
+        });
+        gameCreator.execute();
+
+        JProgressBar progressBar = new JProgressBar();
+        progressBar.setIndeterminate(true);
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(progressBar, BorderLayout.CENTER);
+        panel.add(new JLabel("Please wait..."), BorderLayout.PAGE_START);
+        dialog.add(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+        return gameCreator;
     }
 
     private DrawPanel gamePanel;
@@ -56,7 +95,7 @@ public class ConlifeGUI extends JFrame {
     private int boardLeftInset = 0, boardTopInset = 0;
     private int boardWidth = 0, boardHeight = 0;
     private MouseState drawing = MouseState.NOT_DRAWING;
-    private GameState gameState = GameState.createNewGame();
+    private GameState gameState;
     private Set<CellComponent> cellsThatChangedState = new HashSet<>();
 
     private GameLoop gameLoop = new GameLoop(this);
@@ -65,7 +104,8 @@ public class ConlifeGUI extends JFrame {
 
     private final Random random = new Random();
 
-    private ConlifeGUI() {
+    private ConlifeGUI(GameState gameState) {
+        this.gameState = gameState;
         setTitle("Conway's Game of Life (with Concurrency!)");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLocationRelativeTo(this);
