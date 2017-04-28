@@ -6,8 +6,8 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Queue;
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.Semaphore;
 
 import static conlife.GameState.Phase.*;
 
@@ -18,12 +18,14 @@ class GameThread extends Thread {
     private final CyclicBarrier barrier;
 
     private Queue<Cell> workQueue;
-    private Queue<Cell> cellUpdates;
+    private Queue<Cell> cellsThatChanged;
+    private final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<Cell> nextStepQueue = new ConcurrentLinkedQueue<>();
 
-    public GameThread(ThreadGroup threadGroup, String name, int queueSize, CyclicBarrier barrier) {
+    GameThread(ThreadGroup threadGroup, String name, int queueSize, CyclicBarrier barrier) {
         super(threadGroup, name);
         workQueue = new ArrayDeque<>(queueSize);
-        cellUpdates = new ArrayDeque<>(queueSize);
+        cellsThatChanged = new ArrayDeque<>(queueSize);
         this.barrier = barrier;
     }
 
@@ -43,11 +45,11 @@ class GameThread extends Thread {
     }
 
     Collection<Cell> getCellsThatChanged() {
-        return cellUpdates;
+        return cellsThatChanged;
     }
 
     void clearCellsThatChanged() {
-        cellUpdates.clear();
+        cellsThatChanged.clear();
     }
 
     @Override
@@ -117,11 +119,36 @@ class GameThread extends Thread {
             throw new IllegalArgumentException("Phase must be set to UPDATE");
         }
         Cell cell;
-        while ((cell = workQueue.poll()) != null) {
+        while ((cell = cellUpdateQueue.poll()) != null) {
             if (cell.updateToNextState()) {
-                cellUpdates.add(cell);
+                cellsThatChanged.add(cell);
             }
         }
         phase = WAIT;
+    }
+
+    boolean isCellCurrentQueued(Cell cell) {
+        return workQueue.contains(cell);
+    }
+
+    boolean isCellInNextStepQueue(Cell cell) {
+        return nextStepQueue.contains(cell);
+    }
+
+    void addCellToNextStepQueue(Cell cell) {
+        nextStepQueue.add(cell);
+    }
+
+    void addCellToUpdateQueue(Cell cell) {
+        cellUpdateQueue.add(cell);
+    }
+
+    int getWorkQueueSize() {
+        return workQueue.size();
+    }
+
+    void copyNextCellQueueToCurrent() {
+        workQueue.addAll(nextStepQueue);
+        nextStepQueue.clear();
     }
 }

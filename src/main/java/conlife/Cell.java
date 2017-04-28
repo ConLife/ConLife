@@ -188,13 +188,13 @@ public class Cell {
     public void setCurrentlyAlive(boolean alive) {
         boolean previous = this.alive.getAndSet(alive);
         if (previous != alive) {
-            if (!gameState.currentCellQueue.contains(this)) {
-                gameState.currentCellQueue.add(this);
+            if (!gameState.isCellCurrentlyQueued(this)) {
+                gameState.addCellToCurrentQueue(this);
             }
             for (Direction d : Direction.values()) {
                 Cell neighbor = getNeighbor(d);
-                if (!gameState.currentCellQueue.contains(neighbor)) {
-                    gameState.currentCellQueue.add(neighbor);
+                if (!gameState.isCellCurrentlyQueued(neighbor)) {
+                    gameState.addCellToCurrentQueue(neighbor);
                 }
             }
         }

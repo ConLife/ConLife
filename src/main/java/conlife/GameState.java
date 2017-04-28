@@ -8,6 +8,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Controls all aspects of the mechanics of the game. Most of the operations in this class are not thread safe. However,
@@ -48,14 +49,11 @@ public class GameState {
 
     private GameThread[] threadPool;
     private final CyclicBarrier barrier;
+    private AtomicLong waitingThread = new AtomicLong(0);
 
     private Rules rules;
     private final int boardWidth, boardHeight;
     private Cell[][] board;
-
-    final Queue<Cell> currentCellQueue = new ConcurrentLinkedQueue<>();
-    final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
-    final Queue<Cell> nextStepCellQueue = new ConcurrentLinkedQueue<>();
 
     final Queue<Cell> cellsThatChangedState = new ConcurrentLinkedQueue<>();
 
@@ -177,18 +175,25 @@ public class GameState {
     }
 
     void addCellToNextStepQueue(Cell cell) {
-        nextStepCellQueue.add(cell);
+        int thread = (int) waitingThread.getAndIncrement() % threadPool.length;
+        threadPool[thread].addCellToNextStepQueue(cell);
     }
 
     void addCellToUpdateQueue(Cell cell) {
-        cellUpdateQueue.add(cell);
+        int thread = (int) waitingThread.getAndIncrement() % threadPool.length;
+        threadPool[thread].addCellToUpdateQueue(cell);
     }
 
     /**
      * For testing only
      */
     boolean _nextStepQueueContainsCell(Cell cell) {
-        return nextStepCellQueue.contains(cell);
+        for (GameThread thread : threadPool) {
+            if (thread.isCellInNextStepQueue(cell)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // This is probably where the majority of the threading tricks are gonna come in... We may need to discuss this
@@ -219,14 +224,22 @@ public class GameState {
         }
     }
 
+    private void setThreadPoolPhase(Phase phase) {
+        for (GameThread t : threadPool) {
+            t.phase = phase;
+        }
+    }
+
     void _determineCellsNextState() {
-        distributeWorkload(currentCellQueue, Phase.DETERMINE_NEXT_STATE);
+        setThreadPoolPhase(Phase.DETERMINE_NEXT_STATE);
+        //distributeWorkload(currentCellQueue, Phase.DETERMINE_NEXT_STATE);
         wakeupWorkers();
         waitForWorkersToFinish();
     }
 
     void _updateCellStates() {
-        distributeWorkload(cellUpdateQueue, Phase.UPDATE);
+        setThreadPoolPhase(Phase.UPDATE);
+        //distributeWorkload(cellUpdateQueue, Phase.UPDATE);
         wakeupWorkers();
         waitForWorkersToFinish();
         for (int i = 0; i < threadPool.length; i++) {
@@ -239,8 +252,9 @@ public class GameState {
         // This is probably not worth parallelizing in the way of the other two steps since it would just be two adds
         // instead of one.
         //nextStepCellQueue.parallelStream().forEach(currentCellQueue::add);
-        currentCellQueue.addAll(nextStepCellQueue);
-        nextStepCellQueue.clear();
+        for (GameThread t : threadPool) {
+            t.copyNextCellQueueToCurrent();
+        }
     }
 
     void _incrementGameStep() {
@@ -272,6 +286,28 @@ public class GameState {
 
     public Collection<Cell> getCellsThatChangedState() {
         return cellsThatChangedState;
+    }
+
+    boolean isCellCurrentlyQueued(Cell cell) {
+        for (GameThread thread : threadPool) {
+            if (thread.isCellCurrentQueued(cell)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void addCellToCurrentQueue(Cell cell) {
+        int thread = (int) waitingThread.getAndIncrement() % threadPool.length;
+        threadPool[thread].addCellToWorkQueue(cell);
+    }
+
+    int getCurrentCellQueueSize() {
+        int size = 0;
+        for (GameThread t : threadPool) {
+            size += t.getWorkQueueSize();
+        }
+        return size;
     }
 
     String createBoardString(char deadCell, char liveCell) {
