@@ -16,6 +16,8 @@ import java.nio.file.StandardOpenOption;
 
 public class ConlifeCLI {
 
+    private static final int WARMUP_LOOPS = 10000;
+
     private static GameState gameState;
     private static Lif1_5Reader reader;
     private static int boardSize = 1000;
@@ -97,8 +99,9 @@ public class ConlifeCLI {
     
     public static void main(String[] args) throws FileNotFoundException, ParseException, Rules.RulesException, IOException {
         parseArgs(args);
-        System.out.print("Warming up the JVM");
-        for (int i = 0; i < 10; i++) {
+        int blocks = (int) Math.ceil(WARMUP_LOOPS / (double) totalSteps);
+        System.out.printf("Warming up the JVM with %d game runs", blocks);
+        for (int i = 0; i < blocks; i++) {
             init();
             runGame();
             System.out.print(".");
