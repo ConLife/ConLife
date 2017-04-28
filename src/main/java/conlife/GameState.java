@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Queue;
+import java.util.Random;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CyclicBarrier;
@@ -49,7 +50,8 @@ public class GameState {
 
     private GameThread[] threadPool;
     private final CyclicBarrier barrier;
-    private AtomicLong waitingThread = new AtomicLong(0);
+    //private AtomicLong waitingThread = new AtomicLong(0);
+    private final Random random = new Random();
 
     private Rules rules;
     private final int boardWidth, boardHeight;
@@ -175,13 +177,11 @@ public class GameState {
     }
 
     void addCellToNextStepQueue(Cell cell) {
-        int thread = (int) waitingThread.getAndIncrement() % threadPool.length;
-        threadPool[thread].addCellToNextStepQueue(cell);
+        threadPool[random.nextInt(threadPool.length)].addCellToNextStepQueue(cell);
     }
 
     void addCellToUpdateQueue(Cell cell) {
-        int thread = (int) waitingThread.getAndIncrement() % threadPool.length;
-        threadPool[thread].addCellToUpdateQueue(cell);
+        threadPool[random.nextInt(threadPool.length)].addCellToUpdateQueue(cell);
     }
 
     /**
@@ -298,8 +298,7 @@ public class GameState {
     }
 
     void addCellToCurrentQueue(Cell cell) {
-        int thread = (int) waitingThread.getAndIncrement() % threadPool.length;
-        threadPool[thread].addCellToWorkQueue(cell);
+        threadPool[random.nextInt(threadPool.length)].addCellToWorkQueue(cell);
     }
 
     int getCurrentCellQueueSize() {
