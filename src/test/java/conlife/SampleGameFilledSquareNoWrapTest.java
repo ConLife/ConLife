@@ -131,9 +131,8 @@ public class SampleGameFilledSquareNoWrapTest {
         Cell cell = game.getCell(5, 2);
         assertEquals("Step: " + game.getCurrentStep(), initialCondition, game.createBoardString('.', '#'));
 
-        assertEquals(game.getBoardWidth() * game.getBoardHeight(), game.currentCellQueue.size());
         game.processGameStep();
-        assertEquals(88, game.currentCellQueue.size());
+        assertEquals(88, game.getCurrentCellQueueSize());
         assertEquals("Step: " + game.getCurrentStep(), step1, game.createBoardString('.', '#'));
 
         Cell neighbor = game.getCell(5, 3);
