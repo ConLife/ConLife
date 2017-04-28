@@ -4,27 +4,27 @@ import conlife.GameState;
 import conlife.Rules;
 import conlife.utils.Lif1_5Reader;
 import conlife.utils.PgmWriter;
-import static conlife.utils.PgmWriter.createPgmWriter;
-import java.awt.Dimension;
+
+import java.awt.*;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.ParseException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.text.ParseException;
+
+import static conlife.utils.PgmWriter.createPgmWriter;
 
 public class ConlifeCLI {
 
     private static final int WARMUP_LOOPS = 10000;
-
+    private final static double NANOSECONDS_TO_MILLISECONDS = 1.0 / 1000000.0;
     private static GameState gameState;
     private static Lif1_5Reader reader;
     private static int boardSize = 1000;
     private static int totalSteps = 500;
     private static String inFile = "./samples/LINEPUF.LIF";
     private static int threadCount = 4;
-    private final static double NANOSECONDS_TO_MILLISECONDS = 1.0 / 1000000.0;
     private static boolean outputs = false;
     private static PgmWriter writer;
 
@@ -83,7 +83,7 @@ public class ConlifeCLI {
         }
     }
 
-    private static void init() throws FileNotFoundException, ParseException, Rules.RulesException, IOException {
+    private static void init() throws ParseException, Rules.RulesException, IOException {
         reader = Lif1_5Reader.fromFile(new Dimension(boardSize, boardSize), new File(inFile));
         gameState = GameState.createNewGame(reader.createBoardString('.', '*').split("\n"), '*', threadCount);
         if (outputs) {
@@ -96,15 +96,21 @@ public class ConlifeCLI {
         long time = end - start;
         return (time * NANOSECONDS_TO_MILLISECONDS);
     }
-    
-    public static void main(String[] args) throws FileNotFoundException, ParseException, Rules.RulesException, IOException {
-        parseArgs(args);
+
+    private static void warmup() throws ParseException, IOException, Rules.RulesException {
         int blocks = (int) Math.ceil(WARMUP_LOOPS / (double) totalSteps);
         System.out.printf("Warming up the JVM with %d game runs", blocks);
         for (int i = 0; i < blocks; i++) {
             init();
             runGame();
             System.out.print(".");
+        }
+    }
+
+    public static void main(String[] args) throws ParseException, Rules.RulesException, IOException {
+        parseArgs(args);
+        if (!outputs) {
+            warmup();
         }
         System.out.println("Performing timing");
         init();
