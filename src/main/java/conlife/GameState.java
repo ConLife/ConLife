@@ -7,12 +7,7 @@ import java.util.Queue;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import static javafx.scene.input.KeyCode.T;
 
 /**
  * Controls all aspects of the mechanics of the game. Most of the operations in this class are not thread safe. However,
@@ -121,9 +116,6 @@ public class GameState {
             for (int x = 0; x < boardWidth; x++) {
                 final Cell cell = new Cell(this, x, y);
                 board[y][x] = cell;
-
-                // TEMPORARY TODO REMOVE
-                currentCellQueue.add(cell);
             }
         }
 
