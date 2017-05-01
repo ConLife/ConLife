@@ -1,6 +1,6 @@
-package conlife;
+package conlife.swing;
 
-public class CellUpdate {
+class CellUpdate {
     private final int x, y;
     private final boolean alive;
 

@@ -4,9 +4,6 @@ import conlife.*;
 import conlife.utils.Lif1_5Reader;
 import net.miginfocom.swing.MigLayout;
 
-import java.awt.Dialog.ModalityType;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
