@@ -25,7 +25,6 @@ public class ConlifeCLI {
     private static final int WARMUP_LOOPS = 10000;
     private final static double NANOSECONDS_TO_MILLISECONDS = 1.0 / 1000000.0;
     private static GameState gameState;
-    private static Lif1_5Reader reader;
     private static int boardSize = 1000;
     private static int totalSteps = 500;
     private static String inFile = "./samples/LINEPUF.LIF";
@@ -89,7 +88,7 @@ public class ConlifeCLI {
     }
 
     private static void init() throws ParseException, Rules.RulesException, IOException {
-        reader = Lif1_5Reader.fromFile(new Dimension(boardSize, boardSize), new File(inFile));
+        Lif1_5Reader reader = Lif1_5Reader.fromResourceOrFile(new Dimension(boardSize, boardSize), inFile);
         gameState = GameState.createNewGame(reader.createBoardString('.', '*').split("\n"), '*', threadCount);
         if (outputs) {
             writer = createPgmWriter(new File("./testOutput"), gameState);
