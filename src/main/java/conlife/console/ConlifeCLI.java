@@ -118,7 +118,18 @@ public class ConlifeCLI {
             warmup();
         }
         System.out.println("Performing timing");
-        init();
+        try {
+            init();
+        } catch (ParseException e) {
+            System.out.println("Unable to read initial conditions.");
+            System.exit(1);
+        } catch (Rules.RulesException e) {
+            System.out.println("Error with the current rules.");
+            System.exit(1);
+        } catch (IOException e) {
+            System.out.println("Unable to open initial conditions file.");
+            System.exit(1);
+        }
         long start = System.nanoTime();
         runGame();
         double totalTime = calcTime(start);
