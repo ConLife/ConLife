@@ -27,7 +27,7 @@ public class ConlifeCLI {
     private static GameState gameState;
     private static int boardSize = 1000;
     private static int totalSteps = 500;
-    private static String inFile = "./samples/LINEPUF.LIF";
+    private static String inFile = "/samples/LINEPUF.LIF";
     private static int threadCount = 4;
     private static boolean outputs = false;
     private static PgmWriter writer;
