@@ -5,6 +5,7 @@ import conlife.Rules;
 import java.awt.Dimension;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -24,6 +25,29 @@ public class Lif1_5Reader {
     private final static Pattern DEFAULT_RULES_PATTERN = Pattern.compile("(?:#N)");
     private final static Pattern POSITION_PATTERN = Pattern.compile("#P (-?\\d+) (-?\\d+)");
     private final static Pattern BOARD_LINE_PATTERN = Pattern.compile("(\\*|\\.)+");
+
+    /**
+     * Creates a Life 1.5 reader that loads the initial conditions from the given resource onto a board of the given
+     * dimensions. The resource is first checked for on the class path and if it is not found there it is treated as
+     * a file name.
+     *
+     * @param boardSize The size of the board to load onto.
+     * @param resourceName The name of the resource or file to load from.
+     * @return A Life 1.5 reader loaded with initial conditions.
+     * @throws FileNotFoundException If the given file can't be found.
+     * @throws ParseException If the file format cannot be determined.
+     * @throws Rules.RulesException If the file contains invalid rules.
+     */
+    public static Lif1_5Reader fromResourceOrFile(Dimension boardSize, String resourceName) throws FileNotFoundException, ParseException, Rules.RulesException {
+        Scanner scanner;
+        InputStream is = Lif1_5Reader.class.getResourceAsStream(resourceName);
+        if (is != null) {
+            scanner = new Scanner(is);
+        } else {
+            scanner = new Scanner(new File(resourceName));
+        }
+        return new Lif1_5Reader(boardSize, scanner);
+    }
 
     /**
      * Creates a Life 1.5 reader that loads the initial conditions from the given file onto a board of the given
