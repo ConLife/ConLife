@@ -378,7 +378,7 @@ public class ConlifeGUI extends JFrame {
             stepButton.setEnabled(true);
             rulesField.setEnabled(true);
             clearBoardItem.setEnabled(true);
-            randomBoardItem.setEnabled(false);
+            randomBoardItem.setEnabled(true);
             loadItem.setEnabled(true);
         }
         workerThread.submit(gameLoop);
