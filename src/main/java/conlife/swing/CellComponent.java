@@ -4,9 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class CellComponent extends JComponent {
+class CellComponent extends JComponent {
 
-    public static final int CELL_SIZE = 8;
+    static final int CELL_SIZE = 8;
 
     private static final Color ALIVE_COLOR = Color.red;
     private static final Color DEAD_COLOR = Color.white;
@@ -14,7 +14,7 @@ public class CellComponent extends JComponent {
     private final int cellX, cellY;
     private AtomicBoolean alive = new AtomicBoolean(false);
 
-    public CellComponent(int x, int y) {
+    CellComponent(int x, int y) {
         this.cellX = x;
         this.cellY = y;
     }
@@ -39,19 +39,19 @@ public class CellComponent extends JComponent {
      * @param alive the new state
      * @return true if the new state is different from the previous state.
      */
-    public boolean setAlive(boolean alive) {
+    boolean setAlive(boolean alive) {
         return alive != this.alive.getAndSet(alive);
     }
 
-    public boolean isAlive() {
+    boolean isAlive() {
         return this.alive.get();
     }
 
-    public int getCellX() {
+    int getCellX() {
         return cellX;
     }
 
-    public int getCellY() {
+    int getCellY() {
         return cellY;
     }
 
@@ -62,8 +62,7 @@ public class CellComponent extends JComponent {
 
         CellComponent that = (CellComponent) o;
 
-        if (cellX != that.cellY) return false;
-        return cellY == that.cellY;
+        return cellX == that.cellY && cellY == that.cellY;
     }
 
     @Override

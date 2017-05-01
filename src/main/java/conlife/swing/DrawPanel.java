@@ -3,9 +3,9 @@ package conlife.swing;
 import javax.swing.*;
 import java.awt.*;
 
-public class DrawPanel extends JPanel {
+class DrawPanel extends JPanel {
 
-    public DrawPanel() {
+    DrawPanel() {
         super(null);
     }
 
