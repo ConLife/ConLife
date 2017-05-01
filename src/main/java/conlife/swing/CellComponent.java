@@ -62,7 +62,7 @@ class CellComponent extends JComponent {
 
         CellComponent that = (CellComponent) o;
 
-        return cellX == that.cellY && cellY == that.cellY;
+        return cellX == that.cellX && cellY == that.cellY;
     }
 
     @Override
