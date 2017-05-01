@@ -15,6 +15,11 @@ import java.text.ParseException;
 
 import static conlife.utils.PgmWriter.createPgmWriter;
 
+/**
+ * A program to run timing tests and create pgm image files of the game board.
+ *
+ * @author Nathan Coggins
+ */
 public class ConlifeCLI {
 
     private static final int WARMUP_LOOPS = 10000;

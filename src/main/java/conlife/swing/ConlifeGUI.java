@@ -23,6 +23,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
+/**
+ * A graphical version of the game.
+ *
+ * @author Jeremy Wood, Nathan Coggins
+ */
 public class ConlifeGUI extends JFrame {
 
     private static enum MouseState {

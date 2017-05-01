@@ -2,6 +2,11 @@ package conlife;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Represents a cell on the game board and has methods to manipulate its state.
+ *
+ * @author Jeremy Wood, Nathan Coggins
+ */
 public class Cell {
 
     private final int x, y;

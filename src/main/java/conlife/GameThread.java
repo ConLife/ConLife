@@ -11,6 +11,11 @@ import java.util.concurrent.CyclicBarrier;
 
 import static conlife.GameState.Phase.*;
 
+/**
+ * Responsible for processing all of cells that have been assigned to it.
+ *
+ * @author Jeremy Wood, Nathan Coggins
+ */
 class GameThread extends Thread {
 
     volatile GameState.Phase phase = WAIT;

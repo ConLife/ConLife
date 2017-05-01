@@ -4,6 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * The visual representation of a cell on the game board.
+ *
+ * @author Jeremy Wood
+ */
 class CellComponent extends JComponent {
 
     static final int CELL_SIZE = 8;

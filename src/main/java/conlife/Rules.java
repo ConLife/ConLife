@@ -2,6 +2,11 @@ package conlife;
 
 import java.text.ParseException;
 
+/**
+ * A enum that can assist in processing a cell's next state.
+ *
+ * @author Jeremy Wood, Nathan Coggins
+ */
 public class Rules {
 
     enum Rule {

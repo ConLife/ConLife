@@ -1,5 +1,10 @@
 package conlife;
 
+/**
+ * Cardinal directions used to help find cell neighbors.
+ *
+ * @author Jeremy Wood, Nathan Coggins
+ */
 enum Direction {
 
     // DO NOT CHANGE THE ORDER OF THESE

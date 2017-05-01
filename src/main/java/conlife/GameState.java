@@ -9,11 +9,12 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Controls all aspects of the mechanics of the game. Most of the operations in this class are not thread safe. However,
- * game steps are performed in a thread safe manner and can be parallelized effectively. A ga
+ * game steps are performed in a thread safe manner and can be parallelized effectively.
+ *
+ * @author Jeremy Wood, Nathan Coggins
  */
 public class GameState {
 

@@ -1,3 +1,8 @@
 Total elapsed time on sample file: ./samples/LINEPUF.LIFat board a board size of 1000 was 19382.900417 miliseconds.
 ./samples/LINEPUF.LIF	1000	500	4	6553.720891
 ./samples/LINEPUF.LIF	1000	500	4	6758.147296
+./samples/LINEPUF.LIF	1000	2000	1	6185.322760
+./samples/LINEPUF.LIF	1000	2000	3	6291.225964
+./samples/LINEPUF.LIF	1000	2000	2	6757.518549
+./samples/BSHIP.LIF	100	100	1	38987.532760
+./samples/BSHIP.LIF	100	100	2	20125.663189
