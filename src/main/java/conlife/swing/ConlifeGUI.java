@@ -79,7 +79,7 @@ public class ConlifeGUI extends JFrame {
         return gameCreator;
     }
 
-    private DrawPanel gamePanel;
+    private JPanel gamePanel;
     private JTextField stepField;
     private JButton playButton;
     private JButton stepButton;
@@ -217,7 +217,7 @@ public class ConlifeGUI extends JFrame {
         settingPanel.add(stepLabel, "");
         settingPanel.add(stepField, "growx");
 
-        gamePanel = new DrawPanel();
+        gamePanel = new JPanel(null);
         gamePanel.setBorder(BorderFactory.createEtchedBorder());
         MouseAdapter mouseAdapter = new MouseAdapter() {
             @Override
