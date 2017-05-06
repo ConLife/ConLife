@@ -99,11 +99,13 @@ class GameThread extends Thread {
     }
 
     private void innocuousWait() {
-        while (phase == WAIT) {
-            synchronized (barrier) {
+        synchronized (barrier) {
+            while (phase == WAIT) {
                 try {
                     barrier.wait();
-                } catch (InterruptedException ignore) { }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
