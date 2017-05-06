@@ -208,23 +208,6 @@ public class GameState {
         _incrementGameStep();
     }
 
-    private void distributeWorkload(Queue<Cell> totalWorkload, Phase nextPhase) {
-        int[] cellCounts = getThreadWorkloadSizes(totalWorkload.size());
-        for (int i = 0; i < threadPool.length; i++) {
-            int cellCount = cellCounts[i];
-            for (int j = 0; j < cellCount; j++) {
-                threadPool[i].addCellToWorkQueue(totalWorkload.poll());
-            }
-            // This will start the thread's processing of cells
-            threadPool[i].phase = nextPhase;
-        }
-
-        if (!totalWorkload.isEmpty()) {
-            // This should never happen...
-            throw new IllegalStateException("The cell queue was not properly emptied");
-        }
-    }
-
     private void setThreadPoolPhase(Phase phase) {
         for (GameThread t : threadPool) {
             t.phase = phase;
