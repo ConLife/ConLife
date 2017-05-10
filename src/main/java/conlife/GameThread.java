@@ -27,10 +27,10 @@ class GameThread extends Thread {
     private final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
     private final Queue<Cell> nextStepQueue = new ConcurrentLinkedQueue<>();
 
-    GameThread(ThreadGroup threadGroup, String name, int queueSize, CyclicBarrier barrier) {
+    GameThread(ThreadGroup threadGroup, String name, CyclicBarrier barrier) {
         super(threadGroup, name);
-        workQueue = new ArrayDeque<>(queueSize);
-        cellsThatChanged = new ArrayDeque<>(queueSize);
+        workQueue = new ConcurrentLinkedQueue<>();
+        cellsThatChanged = new ConcurrentLinkedQueue<>();
         this.barrier = barrier;
     }
 

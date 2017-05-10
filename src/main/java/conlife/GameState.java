@@ -51,7 +51,6 @@ public class GameState {
 
     private GameThread[] threadPool;
     private final CyclicBarrier barrier;
-    //private AtomicLong waitingThread = new AtomicLong(0);
     private final Random random = new Random();
 
     private Rules rules;
@@ -132,11 +131,9 @@ public class GameState {
         threadGroup.setDaemon(true);
         barrier = new CyclicBarrier(threadCount + 1);
         threadPool = new GameThread[threadCount];
-        // Determine max number of cells any thread should ever be dealing with
-        int perThreadWorkQueueSize = (int) Math.ceil((boardHeight * boardWidth) / (double) threadCount);
         // Spin up the game threads
         for (int i = 0; i < threadCount; i++) {
-            threadPool[i] = new GameThread(threadGroup, "game-logic-thread-" + i, perThreadWorkQueueSize, barrier);
+            threadPool[i] = new GameThread(threadGroup, "game-logic-thread-" + i, barrier);
             threadPool[i].start();
         }
     }
@@ -216,14 +213,12 @@ public class GameState {
 
     void _determineCellsNextState() {
         setThreadPoolPhase(Phase.DETERMINE_NEXT_STATE);
-        //distributeWorkload(currentCellQueue, Phase.DETERMINE_NEXT_STATE);
         wakeupWorkers();
         waitForWorkersToFinish();
     }
 
     void _updateCellStates() {
         setThreadPoolPhase(Phase.UPDATE);
-        //distributeWorkload(cellUpdateQueue, Phase.UPDATE);
         wakeupWorkers();
         waitForWorkersToFinish();
         for (int i = 0; i < threadPool.length; i++) {
@@ -235,7 +230,6 @@ public class GameState {
     void _copyNextCellQueueToCurrent() {
         // This is probably not worth parallelizing in the way of the other two steps since it would just be two adds
         // instead of one.
-        //nextStepCellQueue.parallelStream().forEach(currentCellQueue::add);
         for (GameThread t : threadPool) {
             t.copyNextCellQueueToCurrent();
         }
