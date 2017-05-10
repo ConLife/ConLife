@@ -113,9 +113,6 @@ public class ConlifeCLI {
 
     public static void main(String[] args) throws ParseException, Rules.RulesException, IOException {
         parseArgs(args);
-        if (!outputs) {
-            warmup();
-        }
         System.out.println("Performing timing");
         try {
             init();
