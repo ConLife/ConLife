@@ -50,6 +50,7 @@ public class GameState {
     private AtomicInteger currentStep = new AtomicInteger(0);
 
     private GameThread[] threadPool;
+    private int nextAssignmentThreadId;
     private final CyclicBarrier barrier;
     private final Random random = new Random();
 
@@ -133,7 +134,7 @@ public class GameState {
         threadPool = new GameThread[threadCount];
         // Spin up the game threads
         for (int i = 0; i < threadCount; i++) {
-            threadPool[i] = new GameThread(threadGroup, "game-logic-thread-" + i, barrier);
+            threadPool[i] = new GameThread(threadGroup, i, barrier);
             threadPool[i].start();
         }
     }
@@ -174,12 +175,34 @@ public class GameState {
         return board[y][x];
     }
 
+    private GameThread getNextThread() {
+        int next;
+        GameThread gameThread = null;
+        Thread t = Thread.currentThread();
+        if (t instanceof GameThread) {
+            gameThread = (GameThread) t;
+            next = gameThread.getNextAssignmentThreadId();
+        } else {
+            next = nextAssignmentThreadId;
+        }
+        next++;
+        if (next >= threadPool.length) {
+            next = 0;
+        }
+        if (gameThread != null) {
+            gameThread.setNextAssignmentThreadId(next);
+        } else {
+            nextAssignmentThreadId = next;
+        }
+        return threadPool[next];
+    }
+
     void addCellToNextStepQueue(Cell cell) {
-        threadPool[random.nextInt(threadPool.length)].addCellToNextStepQueue(cell);
+        getNextThread().addCellToNextStepQueue(cell);
     }
 
     void addCellToUpdateQueue(Cell cell) {
-        threadPool[random.nextInt(threadPool.length)].addCellToUpdateQueue(cell);
+        getNextThread().addCellToUpdateQueue(cell);
     }
 
     /**
@@ -276,7 +299,7 @@ public class GameState {
     }
 
     void addCellToCurrentQueue(Cell cell) {
-        threadPool[random.nextInt(threadPool.length)].addCellToWorkQueue(cell);
+        getNextThread().addCellToWorkQueue(cell);
     }
 
     int getCurrentCellQueueSize() {

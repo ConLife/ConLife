@@ -26,12 +26,14 @@ class GameThread extends Thread {
     private Queue<Cell> cellsThatChanged;
     private final Queue<Cell> cellUpdateQueue = new ConcurrentLinkedQueue<>();
     private final Queue<Cell> nextStepQueue = new ConcurrentLinkedQueue<>();
+    private int nextAssignmentThreadId;
 
-    GameThread(ThreadGroup threadGroup, String name, CyclicBarrier barrier) {
-        super(threadGroup, name);
+    GameThread(ThreadGroup threadGroup, int id, CyclicBarrier barrier) {
+        super(threadGroup, "game-logic-thread-" + id);
         workQueue = new ConcurrentLinkedQueue<>();
         cellsThatChanged = new ConcurrentLinkedQueue<>();
         this.barrier = barrier;
+        this.nextAssignmentThreadId = id;
     }
 
     /**
@@ -157,5 +159,13 @@ class GameThread extends Thread {
     void copyNextCellQueueToCurrent() {
         workQueue.addAll(nextStepQueue);
         nextStepQueue.clear();
+    }
+
+    int getNextAssignmentThreadId() {
+        return nextAssignmentThreadId;
+    }
+
+    void setNextAssignmentThreadId(int id) {
+        nextAssignmentThreadId = id;
     }
 }
