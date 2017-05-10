@@ -1,8 +1,31 @@
-Total elapsed time on sample file: ./samples/LINEPUF.LIFat board a board size of 1000 was 19382.900417 miliseconds.
-./samples/LINEPUF.LIF	1000	500	4	6553.720891
-./samples/LINEPUF.LIF	1000	500	4	6758.147296
-./samples/LINEPUF.LIF	1000	2000	1	6185.322760
-./samples/LINEPUF.LIF	1000	2000	3	6291.225964
-./samples/LINEPUF.LIF	1000	2000	2	6757.518549
-./samples/BSHIP.LIF	100	100	1	38987.532760
-./samples/BSHIP.LIF	100	100	2	20125.663189
+sample_file	board_size	step_count	thread_count	time_in_ms
+# Timings using ExecutorService
+./samples/LINEPUF.LIF	1000	2000	1	22419.887045
+./samples/LINEPUF.LIF	1000	2000	2	23508.982100
+./samples/LINEPUF.LIF	1000	2000	3	24832.595273
+# Timings using a custom thread pool implementation
+./samples/LINEPUF.LIF	1000	2000	1	6764.895372
+./samples/LINEPUF.LIF	1000	2000	2	6765.921227
+./samples/LINEPUF.LIF	1000	2000	3	6704.858463
+# Timings using a sample file with more stuff going on
+./samples/MAX2.LIF	600	500	1	6808.622613
+./samples/MAX2.LIF	600	500	1	6667.687367
+./samples/MAX2.LIF	600	500	1	6808.754942
+./samples/MAX2.LIF	600	500	2	5156.410550
+./samples/MAX2.LIF	600	500	2	5709.644417
+./samples/MAX2.LIF	600	500	2	5433.396334
+./samples/MAX2.LIF	600	500	3	7130.594776
+./samples/MAX2.LIF	600	500	3	6880.166796
+./samples/MAX2.LIF	600	500	3	6862.516112
+./samples/MAX2.LIF	600	500	4	6607.409954
+./samples/MAX2.LIF	600	500	4	6446.995234
+./samples/MAX2.LIF	600	500	4	6966.626669
+# And a larger problem size...
+./samples/MAX2.LIF	1200	1000	1	51422.727206
+./samples/MAX2.LIF	1200	1000	1	50914.590096
+./samples/MAX2.LIF	1200	1000	2	37233.741933
+./samples/MAX2.LIF	1200	1000	2	40795.502938
+./samples/MAX2.LIF	1200	1000	3	49664.339275
+./samples/MAX2.LIF	1200	1000	3	51463.738789
+./samples/MAX2.LIF	1200	1000	4	48414.793690
+./samples/MAX2.LIF	1200	1000	4	47772.436378
